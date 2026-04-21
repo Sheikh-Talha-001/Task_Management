@@ -14,10 +14,10 @@ app.use(express.json());
 
 // Mount task routes at /api/tasks
 app.use('/api/tasks', taskRoutes);
-// app.use((req, res, next) => {
-//   console.log(`Request hit: ${req.method} ${req.originalUrl}`);
-//   next();
-// });
+app.use((req, res, next) => {
+  console.log(`Request hit: ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 const PORT = process.env.PORT || 5000;
 
