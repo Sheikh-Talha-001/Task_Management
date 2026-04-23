@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 
+const { protect } = require('../middleware/authMiddleware');
+
 const {
   createTask,
   getTasks,
@@ -10,13 +12,16 @@ const {
   deleteTask,
 } = require('../controllers/taskController');
 
+// ─── Apply auth middleware to ALL task routes ─────────────────────────────────
+router.use(protect);
+
 // ─── Routes for /api/tasks ───────────────────────────────────────────────────
 
 router.route('/')
   .get((req, res, next) => {
     console.log(`Route hit: GET /api/tasks`);
     next();
-  }, getTasks)        // GET  /api/tasks  → return all tasks
+  }, getTasks)        // GET  /api/tasks  → return all tasks for the logged-in user
   .post((req, res, next) => {
     console.log(`Route hit: POST /api/tasks`);
     next();

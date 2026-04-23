@@ -1,26 +1,88 @@
 // server/index.js
 require('dotenv').config();
-const express = require('express');
-const connectDB = require('./config/db');
-const taskRoutes = require('./routes/taskRoutes');
+const express    = require('express');
+const helmet     = require('helmet');
+const rateLimit  = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const swaggerUi  = require('swagger-ui-express');
+
+const connectDB     = require('./config/db');
+const swaggerSpec   = require('./config/swaggerConfig');
+const authRoutes    = require('./routes/auth');
+const taskRoutes    = require('./routes/taskRoutes');
 
 const app = express();
 
-// Connect to MongoDB
+// ─── Connect to MongoDB ───────────────────────────────────────────────────────
 connectDB();
 
-// Middleware to parse incoming JSON requests
+// ─── Security Middleware ──────────────────────────────────────────────────────
+
+// 1. Helmet — sets secure HTTP response headers
+app.use(helmet());
+
+// 2. Rate Limiter — 100 requests per 15 minutes per IP (active in all envs)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,                  // limit each IP to 100 requests per window
+  standardHeaders: true,     // return rate limit info in RateLimit-* headers
+  legacyHeaders: false,      // disable X-RateLimit-* legacy headers
+  message: {
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+  },
+});
+app.use('/api', limiter);
+
+// ─── Body Parsing ─────────────────────────────────────────────────────────────
 app.use(express.json());
 
-// Mount task routes at /api/tasks
-app.use('/api/tasks', taskRoutes);
+// 3. Mongo Sanitize — strips $ and . from req.body, req.query, req.params
+//    to prevent NoSQL injection attacks
+app.use(mongoSanitize());
+
+// ─── API Documentation (development + production) ────────────────────────────
+// Swagger UI is always available; restrict in production via env var if needed
+if (process.env.NODE_ENV !== 'test') {
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customSiteTitle: 'Task Management API Docs',
+      swaggerOptions: {
+        docExpansion: 'list',  // expand operation list by default
+        filter: true,          // enable search bar
+      },
+    })
+  );
+  console.log(
+    `📄 Swagger docs available at http://localhost:${process.env.PORT || 5000}/api-docs`
+  );
+}
+
+// ─── Request Logger ───────────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  console.log(`Request hit: ${req.method} ${req.originalUrl}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
-const PORT = process.env.PORT || 5000;
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);   // Public: register & login
+app.use('/api/tasks', taskRoutes);  // Protected: requires JWT
 
+// ─── 404 Handler ─────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ message: `Route '${req.originalUrl}' not found` });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${err.stack}`);
+  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
+});
+
+// ─── Start Server ─────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} 🛠️`);
 });

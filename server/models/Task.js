@@ -4,6 +4,13 @@ const mongoose = require('mongoose');
 // Define the Task schema
 const taskSchema = new mongoose.Schema(
   {
+    // The user who owns this task
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+
     // Task title - required, trimmed of whitespace
     title: {
       type: String,
