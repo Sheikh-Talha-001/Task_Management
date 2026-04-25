@@ -72,13 +72,13 @@ const generateToken = (userId) => {
 // @desc    Register a new user
 // @route   POST /api/auth/register
 router.post('/register', async (req, res, next) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   // Validate required fields
-  if (!email || !password) {
+  if (!name || !email || !password) {
     return res
       .status(400)
-      .json({ message: 'Please provide both email and password' });
+      .json({ message: 'Please provide name, email, and password' });
   }
 
   try {
@@ -91,11 +91,12 @@ router.post('/register', async (req, res, next) => {
     }
 
     // Create the user (password is hashed automatically by the pre-save hook)
-    const user = await User.create({ email, password });
+    const user = await User.create({ name, email, password });
 
     // Respond with user info + JWT
     res.status(201).json({
       _id: user._id,
+      name: user.name,
       email: user.email,
       token: generateToken(user._id),
     });
@@ -197,6 +198,7 @@ router.post('/login', async (req, res) => {
     // Respond with user info + JWT
     res.status(200).json({
       _id: user._id,
+      name: user.name,
       email: user.email,
       token: generateToken(user._id),
     });

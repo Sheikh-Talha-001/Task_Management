@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, Github, Chrome, Apple, ChevronRight, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import toast from 'react-hot-toast';
 
 import api from '../lib/api';
 
@@ -10,13 +11,11 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
-    setError('');
     if (!email || !password || (!isLogin && !name)) {
-      setError('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
@@ -25,16 +24,16 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
       if (isLogin) {
         const { data } = await api.post('/auth/login', { email, password });
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({ _id: data._id, email: data.email }));
+        localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email }));
         onLogin();
       } else {
-        const { data } = await api.post('/auth/register', { email, password });
+        const { data } = await api.post('/auth/register', { name, email, password });
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({ _id: data._id, email: data.email }));
+        localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email }));
         onLogin();
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -71,12 +70,6 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                             <h2 className="text-xl font-semibold text-slate-900">Welcome Back</h2>
                             <p className="text-slate-500 text-sm mt-1">Please enter your details to sign in</p>
                         </div>
-
-                        {error && (
-                            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 text-center">
-                                {error}
-                            </div>
-                        )}
 
                         <div className="space-y-4">
                             <div className="space-y-1.5">
@@ -162,12 +155,6 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                             <h2 className="text-2xl font-bold text-slate-900">Create Account</h2>
                             <p className="text-slate-500 text-sm mt-1">Start your management journey today.</p>
                         </div>
-
-                        {error && (
-                            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 text-center">
-                                {error}
-                            </div>
-                        )}
 
                         <div className="space-y-4">
                             <div className="space-y-1.5">

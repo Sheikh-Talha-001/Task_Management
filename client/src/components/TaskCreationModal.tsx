@@ -3,6 +3,7 @@ import { X, Calendar, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Status, Task } from '../types';
+import toast from 'react-hot-toast';
 
 interface TaskCreationModalProps {
   isOpen: boolean;
@@ -15,9 +16,16 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ isOpen, on
   const [status, setStatus] = useState<Status>('Pending');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [showError, setShowError] = useState(false);
 
   const handleSubmit = () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setShowError(true);
+      toast.error('Task title is required');
+      return;
+    }
+    
+    setShowError(false);
     
     onCreate({
       title,
@@ -71,9 +79,15 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ isOpen, on
                   <input 
                     type="text" 
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (showError) setShowError(false);
+                    }}
                     placeholder="e.g., Update primary navigation"
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300"
+                    className={cn(
+                      "w-full px-4 py-4 bg-slate-50 border rounded-2xl text-sm focus:outline-none focus:ring-2 transition-all placeholder:text-slate-300",
+                      showError ? "border-rose-300 focus:ring-rose-500/10 focus:border-rose-500" : "border-slate-200 focus:ring-[#006644]/5 focus:border-[#006644]"
+                    )}
                   />
                </div>
 
@@ -131,8 +145,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ isOpen, on
             <div className="p-8 border-t border-slate-50">
                <button 
                   onClick={handleSubmit}
-                  disabled={!title.trim()}
-                  className="w-full bg-[#006644] hover:bg-[#005236] disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-semibold transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 group"
+                  className="w-full bg-[#006644] hover:bg-[#005236] text-white py-4 rounded-2xl font-semibold transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 group"
                 >
                   <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                   Create Task
