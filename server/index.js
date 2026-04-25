@@ -1,5 +1,6 @@
 // server/index.js
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express    = require('express');
 const helmet     = require('helmet');
 const rateLimit  = require('express-rate-limit');
@@ -11,7 +12,12 @@ const swaggerSpec   = require('./config/swaggerConfig');
 const authRoutes    = require('./routes/auth');
 const taskRoutes    = require('./routes/taskRoutes');
 
+const cors = require('cors');
+
 const app = express();
+
+// Enable CORS for all routes (to allow requests from the Vite frontend)
+app.use(cors());
 
 // ─── Connect to MongoDB ───────────────────────────────────────────────────────
 connectDB();
