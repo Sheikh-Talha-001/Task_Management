@@ -11,6 +11,7 @@ const connectDB     = require('./config/db');
 const swaggerSpec   = require('./config/swaggerConfig');
 const authRoutes    = require('./routes/auth');
 const taskRoutes    = require('./routes/taskRoutes');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const cors = require('cors');
 
@@ -81,11 +82,7 @@ app.use((req, res) => {
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error(`[ERROR] ${err.stack}`);
-  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
-});
+app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
