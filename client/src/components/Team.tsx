@@ -111,13 +111,13 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+          className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
         >
           <Menu size={24} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Profile</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Manage your professional identity and activity.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">My Profile</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Manage your professional identity and activity.</p>
         </div>
       </div>
 
@@ -125,9 +125,9 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-[32px] md:rounded-[40px] p-6 md:p-10 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10"
+        className="bg-white dark:bg-slate-800 rounded-[32px] md:rounded-[40px] p-6 md:p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10"
       >
-        <div className="absolute top-0 left-0 w-full h-24 md:h-32 bg-linear-to-r from-emerald-50 to-blue-50 opacity-60 z-0" />
+        <div className="absolute top-0 left-0 w-full h-24 md:h-32 bg-linear-to-r from-emerald-50 to-blue-50 dark:from-slate-700 dark:to-slate-700 opacity-60 z-0" />
         
         {/* Avatar */}
         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 md:border-8 border-white shadow-xl z-10 shrink-0 bg-emerald-500 flex items-center justify-center">
@@ -237,14 +237,14 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activity */}
-        <div className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-slate-100">
-          <h3 className="text-xl font-bold text-slate-900 mb-8">Recent Activity</h3>
+        <div className="bg-white dark:bg-slate-800 p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-slate-100 dark:border-slate-700">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Recent Activity</h3>
           <div className="relative border-l-2 border-slate-50 ml-2 md:ml-4 space-y-10">
             {activity.length > 0 ? activity.map((item, i) => (
               <div key={i} className="relative pl-8">
                 <div className={cn("absolute left-[-9px] top-1 w-4 h-4 rounded-full ring-4 ring-white", item.color)} />
                 <div className="mb-1">
-                  <span className="font-bold text-slate-900 text-sm">{item.title}</span>
+                  <span className="font-bold text-slate-900 dark:text-white text-sm">{item.title}</span>
                 </div>
                 <div className="text-xs text-slate-500 mb-2">{item.detail}</div>
                 <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400 flex items-center gap-1">
@@ -282,9 +282,9 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
             </div>
           </div>
 
-          <div className="bg-white p-10 rounded-[40px] border border-slate-100 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 p-10 rounded-[40px] border border-slate-100 dark:border-slate-700 flex items-center justify-between">
             <div>
-                <h3 className="font-bold text-slate-900">Weekly Goal</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white">Weekly Goal</h3>
                 <p className="text-xs text-slate-500 mt-1">
                   {tasks.length - stats.completed} tasks remaining
                 </p>

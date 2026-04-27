@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Task } from './types';
 import api from './lib/api';
 import { Toaster } from 'react-hot-toast';
+import { SettingsProvider } from './context/SettingsContext';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -94,7 +95,8 @@ export default function App() {
   }
 
   return (
-    <div className="flex bg-[#f8fafc] min-h-screen font-sans selection:bg-emerald-600/10 selection:text-emerald-600 overflow-x-hidden">
+    <SettingsProvider>
+    <div className="flex bg-[#f8fafc] dark:bg-slate-900 min-h-screen font-sans selection:bg-emerald-600/10 selection:text-emerald-600 overflow-x-hidden transition-colors duration-300">
       <Sidebar 
         activeTab={activeTab} 
         onTabChange={(tab) => {
@@ -173,6 +175,7 @@ export default function App() {
         }} 
       />
     </div>
+    </SettingsProvider>
   );
 }
 

@@ -14,7 +14,7 @@ const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hid
       "p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-44 shadow-sm group border transition-all duration-500",
       color === 'green' 
         ? "bg-linear-to-br from-[#1b5e40] to-[#0a2e1d] text-white border-transparent" 
-        : "bg-white border-slate-100 text-slate-900 hover:shadow-xl hover:shadow-slate-200/50",
+        : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-900 dark:text-white hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50",
       onClick && "cursor-pointer"
     )}
   >
@@ -119,12 +119,12 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
         <div className="flex items-center gap-4">
           <button 
              onClick={onMenuClick}
-             className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+             className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
            >
              <Menu size={24} />
           </button>
           <div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
             <p className="text-slate-400 mt-2 font-medium">Plan, prioritize, and accomplish your tasks with ease.</p>
           </div>
         </div>
@@ -153,10 +153,10 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
         {/* Left Section (Project Analytics and Team) - 2 cols */}
         <div className="lg:col-span-2 space-y-8">
             {/* Project Analytics Card */}
-            <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 p-8 shadow-sm">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-bold text-slate-900">Task Completion Progress</h3>
-                <div className="px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-bold rounded-full border border-slate-100">WEEKLY</div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Task Completion Progress</h3>
+                <div className="px-3 py-1 bg-slate-50 dark:bg-slate-700 text-slate-400 text-[10px] font-bold rounded-full border border-slate-100 dark:border-slate-600">WEEKLY</div>
               </div>
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -210,9 +210,9 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
             </div>
 
             {/* Recent Tasks */}
-            <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 p-8 shadow-sm">
                 <div className="flex justify-between items-center mb-10">
-                  <h3 className="text-lg font-bold text-slate-900">Recent Tasks</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Tasks</h3>
                   <button onClick={() => onTabChange('tasks')} className="text-[#0a2e1d] text-xs font-bold uppercase tracking-wider hover:underline">
                     View All
                   </button>
@@ -229,7 +229,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
                             {task.status === 'Completed' ? <CheckCircle2 size={20} /> : <Clock size={20} />}
                           </div>
                           <div>
-                            <h5 className="text-xs font-bold text-slate-900">{task.title}</h5>
+                            <h5 className="text-xs font-bold text-slate-900 dark:text-white">{task.title}</h5>
                             <p className="text-[10px] text-slate-400 font-medium mt-0.5 truncate max-w-sm">{task.description}</p>
                           </div>
                         </div>
@@ -254,9 +254,9 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
         {/* Right Section (Gauge and Timer) - 1 col */}
         <div className="lg:col-span-1 space-y-8">
             {/* Overall Progress Gauge */}
-            <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm flex flex-col items-center">
+            <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 p-8 shadow-sm flex flex-col items-center">
               <div className="w-full text-left mb-4">
-                <h3 className="text-lg font-bold text-slate-900">Overall Progress</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Overall Progress</h3>
               </div>
               <div className="relative w-48 h-48 flex items-center justify-center mt-4">
                 <svg className="w-full h-full" viewBox="0 0 100 100">
@@ -279,7 +279,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center pt-8">
-                  <span className="text-5xl font-black text-slate-900">{overallPercentage}%</span>
+                  <span className="text-5xl font-black text-slate-900 dark:text-white">{overallPercentage}%</span>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Total Completed</span>
                 </div>
               </div>

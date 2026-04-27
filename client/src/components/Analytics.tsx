@@ -36,7 +36,7 @@ const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: an
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-colors"
+    className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-900 transition-colors"
   >
     <div className={cn(
       "absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl opacity-10 group-hover:opacity-20 transition-opacity",
@@ -54,7 +54,7 @@ const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: an
     </div>
 
     <div className="flex items-baseline gap-2">
-      <span className="text-3xl font-bold text-slate-900">{value}</span>
+      <span className="text-3xl font-bold text-slate-900 dark:text-white">{value}</span>
       {unit && <span className="text-slate-400 text-sm font-medium">{unit}</span>}
     </div>
 
@@ -181,13 +181,13 @@ export const Analytics: React.FC<{
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+            className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
           >
             <Menu size={24} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Analytics Intelligence</h1>
-            <p className="text-slate-500 text-sm mt-1">Real-time performance metrics from your tasks.</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Analytics Intelligence</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time performance metrics from your tasks.</p>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export const Analytics: React.FC<{
                   "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
                   range === opt.val
                     ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                    : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 )}
               >
                 {opt.label}
@@ -255,12 +255,12 @@ export const Analytics: React.FC<{
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Performance Trend */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">Task Activity</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-lg">Task Activity</h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-900">{metrics.completed}</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.completed}</span>
                 <span className="text-sm text-slate-400 font-medium">completed</span>
                 <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full flex items-center gap-1">
                   <TrendingUp size={12} /> {range}d
@@ -326,11 +326,11 @@ export const Analytics: React.FC<{
       {/* Bottom Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Status Breakdown */}
-        <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex flex-col mb-8">
-            <h3 className="font-bold text-slate-900 text-lg">Status Breakdown</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white text-lg">Status Breakdown</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xl font-bold text-slate-900">{metrics.total}</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
               <span className="text-sm text-slate-400 font-medium">tasks</span>
             </div>
           </div>
@@ -350,11 +350,11 @@ export const Analytics: React.FC<{
         </div>
 
         {/* Priority Distribution */}
-        <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
           <div className="flex flex-col mb-8">
-            <h3 className="font-bold text-slate-900 text-lg">Priority Distribution</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white text-lg">Priority Distribution</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xl font-bold text-slate-900">{metrics.total}</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
               <span className="text-sm text-slate-400 font-medium">tasks</span>
             </div>
           </div>
@@ -363,9 +363,9 @@ export const Analytics: React.FC<{
               <div key={track.label} className="space-y-2">
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
                   <span>{track.label}</span>
-                  <span className="text-slate-900">{track.value}%</span>
+                  <span className="text-slate-900 dark:text-white">{track.value}%</span>
                 </div>
-                <div className="w-full bg-slate-50 h-3 rounded-full overflow-hidden border border-slate-100/50">
+                <div className="w-full bg-slate-50 dark:bg-slate-700 h-3 rounded-full overflow-hidden border border-slate-100/50 dark:border-slate-600/50">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${track.value}%` }}

@@ -33,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
       />
 
       <div className={cn(
-        "w-72 h-screen bg-white border-r border-slate-100 flex flex-col p-8 fixed left-0 top-0 z-70 transition-transform duration-300 lg:translate-x-0 shadow-2xl lg:shadow-none",
+        "w-72 h-screen bg-white dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700 flex flex-col p-8 fixed left-0 top-0 z-70 transition-all duration-300 lg:translate-x-0 shadow-2xl lg:shadow-none",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between mb-10 pl-2">
@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
                   <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
                 </svg>
             </div>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">Donezo</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Donezo</span>
           </div>
         </div>
 
@@ -58,14 +58,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group",
                     activeTab === item.id 
-                      ? "bg-slate-50 text-slate-900 shadow-sm" 
-                      : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
+                      ? "bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
+                      : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={20} className={cn(
                         "transition-colors",
-                        activeTab === item.id ? "text-slate-900" : "text-slate-400 group-hover:text-slate-900"
+                        activeTab === item.id ? "text-slate-900 dark:text-white" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
                     )} />
                     {item.label}
                   </div>
@@ -90,14 +90,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group",
                       activeTab === id 
-                        ? "bg-slate-50 text-slate-900 shadow-sm" 
-                        : "text-slate-400 hover:text-slate-900 hover:bg-slate-50",
-                      id === 'logout' && "text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                        ? "bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
+                        : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700",
+                      id === 'logout' && "text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                     )}
                   >
                     <Icon size={20} className={cn(
                         "transition-colors",
-                        activeTab === id ? "text-slate-900" : id === 'logout' ? "text-rose-500" : "text-slate-400 group-hover:text-slate-900"
+                        activeTab === id ? "text-slate-900 dark:text-white" : id === 'logout' ? "text-rose-500" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
                     )} />
                     {label}
                   </button>

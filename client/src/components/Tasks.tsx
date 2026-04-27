@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
+import { useSettings } from '../context/SettingsContext';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       onClick={onClick}
-      className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-4 hover:shadow-xl transition-all cursor-pointer relative group flex flex-col justify-between h-full task-card shadow-sm hover:-translate-y-1"
+      className="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 space-y-4 hover:shadow-xl transition-all cursor-pointer relative group flex flex-col justify-between h-full task-card shadow-sm hover:-translate-y-1"
     >
       <div className="space-y-4 flex-1">
           <div className="flex justify-between items-start">
@@ -118,7 +119,7 @@ const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick
           </div>
           
           <div>
-          <h3 className="font-bold text-slate-900 leading-snug text-lg">{task.title}</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white leading-snug text-lg">{task.title}</h3>
           <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed font-medium">{task.description}</p>
           </div>
 
@@ -131,7 +132,7 @@ const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick
           )}
       </div>
 
-      <div className="pt-4 border-t border-slate-50 flex justify-between items-center mt-auto">
+      <div className="pt-4 border-t border-slate-50 dark:border-slate-700 flex justify-between items-center mt-auto">
         <div className="flex items-center gap-2 text-slate-400">
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             <Clock size={14} />
@@ -362,16 +363,21 @@ export const Tasks: React.FC<{
   onTaskClick: (task: Task) => void,
   onMenuClick: () => void
 }> = ({ tasks, onNewTask, onTaskClick, onMenuClick }) => {
+  const { pushNotifications } = useSettings();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<string>('All');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Rebuild notifications whenever tasks change
+  // Rebuild notifications whenever tasks change (only if push notifications enabled)
   useEffect(() => {
-    setNotifications(buildNotifications(tasks));
-  }, [tasks]);
+    if (pushNotifications) {
+      setNotifications(buildNotifications(tasks));
+    } else {
+      setNotifications([]);
+    }
+  }, [tasks, pushNotifications]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -403,7 +409,7 @@ export const Tasks: React.FC<{
         <div className="flex items-center gap-4 w-full lg:max-w-xl">
           <button 
             onClick={onMenuClick}
-            className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+            className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
           >
             <Menu size={24} />
           </button>
@@ -414,7 +420,7 @@ export const Tasks: React.FC<{
               placeholder="Search tasks…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-16 pr-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-medium shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all placeholder:text-slate-300"
+              className="w-full pl-16 pr-6 py-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
             />
           </div>
         </div>
@@ -427,7 +433,7 @@ export const Tasks: React.FC<{
           <div className="relative">
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all relative"
+              className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all relative"
             >
               <Bell size={20} strokeWidth={1.5} />
               {unreadCount > 0 && (
@@ -450,7 +456,7 @@ export const Tasks: React.FC<{
       {/* ── Filter row + Create button ── */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-           <div className="flex bg-white p-1 rounded-2xl border border-slate-100 shadow-sm w-full md:w-auto overflow-x-auto custom-scrollbar">
+           <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm w-full md:w-auto overflow-x-auto custom-scrollbar">
              {['All', 'In Progress', 'Pending', 'Completed'].map(s => (
                <button
                 key={s}
@@ -465,7 +471,7 @@ export const Tasks: React.FC<{
              ))}
            </div>
 
-           <div className="hidden lg:flex items-center gap-6 bg-white p-3 px-6 rounded-3xl border border-slate-100 shadow-sm">
+           <div className="hidden lg:flex items-center gap-6 bg-white dark:bg-slate-800 p-3 px-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm">
              <div className="w-32 bg-slate-100 h-2 rounded-full relative overflow-hidden">
                 <div className="absolute left-0 top-0 h-full bg-[#006644] rounded-full transition-all duration-500" style={{ width: filteredTasks.length > 0 ? `${(filteredTasks.filter(t => t.status === 'Completed').length / filteredTasks.length) * 100}%` : '0%' }} />
              </div>

@@ -52,13 +52,13 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+          className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
         >
           <Menu size={24} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Help & Feedback</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Have a question or suggestion? Let us know.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Help & Feedback</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Have a question or suggestion? Let us know.</p>
         </div>
       </div>
 
@@ -70,13 +70,13 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[32px] p-10 md:p-16 border border-slate-100 shadow-sm text-center space-y-6"
+              className="bg-white dark:bg-slate-800 rounded-[32px] p-10 md:p-16 border border-slate-100 dark:border-slate-700 shadow-sm text-center space-y-6"
             >
               <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle size={40} className="text-emerald-500" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Email Sent Successfully!</h2>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Email Sent Successfully!</h2>
                 <p className="text-slate-500 mt-3 leading-relaxed max-w-sm mx-auto">
                   Thank you for your feedback. We have received your message and will contact you soon.
                 </p>
@@ -94,16 +94,16 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-[32px] p-8 md:p-10 border border-slate-100 shadow-sm space-y-8"
+              className="bg-white dark:bg-slate-800 rounded-[32px] p-8 md:p-10 border border-slate-100 dark:border-slate-700 shadow-sm space-y-8"
             >
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">Send us a message</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Send us a message</h3>
                 <p className="text-sm text-slate-400">Fill out the form below and we'll get back to you as soon as possible.</p>
               </div>
 
               {/* Name */}
               <div className="space-y-3">
-                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 ml-1 flex items-center gap-2">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 dark:text-white ml-1 flex items-center gap-2">
                   <User size={12} />
                   Your Name
                 </label>
@@ -112,13 +112,13 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your full name"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-3">
-                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 ml-1 flex items-center gap-2">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 dark:text-white ml-1 flex items-center gap-2">
                   <Mail size={12} />
                   Your Email
                 </label>
@@ -127,13 +127,13 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
                 />
               </div>
 
               {/* Message */}
               <div className="space-y-3">
-                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 ml-1 flex items-center gap-2">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-900 dark:text-white ml-1 flex items-center gap-2">
                   <MessageSquare size={12} />
                   Your Message
                 </label>
@@ -141,7 +141,7 @@ export const Help: React.FC<HelpProps> = ({ onMenuClick }) => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Describe your issue, question, or suggestion…"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 min-h-[160px] resize-none"
+                  className="w-full px-4 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 min-h-[160px] resize-none"
                 />
               </div>
 
