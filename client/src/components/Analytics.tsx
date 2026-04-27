@@ -297,7 +297,7 @@ export const Analytics: React.FC<{
         </div>
 
         {/* Summary Card */}
-        <div className="bg-gradient-to-br from-[#006644] to-[#004e33] p-8 rounded-[32px] text-white flex flex-col justify-between shadow-xl shadow-emerald-200/50">
+        <div className="bg-linear-to-br from-[#006644] to-[#004e33] p-8 rounded-[32px] text-white flex flex-col justify-between shadow-xl shadow-emerald-200/50">
           <div>
             <h4 className="text-xl font-bold mb-3 leading-tight">Quick Summary</h4>
             <p className="text-emerald-100/70 text-sm leading-relaxed">
