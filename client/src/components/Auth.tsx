@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, Github, Chrome, Apple, ChevronRight, Leaf } from 'lucide-react';
+import { Mail, Lock, User, Github, Chrome, Apple, ChevronRight, Leaf, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async () => {
     if (!email || !password || (!isLogin && !name)) {
@@ -46,7 +47,7 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/20 rounded-full blur-[120px]" />
 
       <div className="z-10 w-full max-w-md px-6">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-6">
             <div className="w-14 h-14 bg-[#006644] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-emerald-900/10">
                 <Leaf size={32} className="text-emerald-50 fill-emerald-50/20" />
             </div>
@@ -90,12 +91,19 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                                     <input 
-                                        type="password" 
+                                        type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter your password" 
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all"
+                                        className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -129,14 +137,6 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                             <button className="w-full flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-2xl text-sm font-medium hover:bg-slate-50 transition-all">
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
                                 Continue with Google
-                            </button>
-                            <button className="w-full flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-2xl text-sm font-medium hover:bg-slate-50 transition-all">
-                                <Apple size={20} />
-                                Continue with Apple
-                            </button>
-                            <button className="w-full flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-2xl text-sm font-medium hover:bg-slate-50 transition-all">
-                                <Github size={20} />
-                                Continue with GitHub
                             </button>
                         </div>
 
@@ -188,12 +188,19 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                                     <input 
-                                        type="password" 
+                                        type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••" 
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#064e3b]/5 focus:border-[#064e3b] transition-all"
+                                        className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#064e3b]/5 focus:border-[#064e3b] transition-all"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
