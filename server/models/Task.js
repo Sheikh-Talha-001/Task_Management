@@ -34,6 +34,13 @@ const taskSchema = new mongoose.Schema(
       default: 'Pending',
     },
 
+    // Priority level of the task
+    priority: {
+      type: String,
+      enum: ['Low', 'Medium', 'High', 'Urgent'],
+      default: 'Medium',
+    },
+
     // Optional due date for the task
     dueDate: {
       type: Date,

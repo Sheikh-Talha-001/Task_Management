@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { ArrowUpRight, CheckCircle2, RefreshCw, Clock, MoreHorizontal, Plus, RotateCcw, Play, Pause, Download, Mail, Bell, Search, Video, Calendar, Flag, LayoutDashboard, CheckSquare, Users, BarChart3, Settings } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, RefreshCw, Clock, MoreHorizontal, Plus, RotateCcw, Play, Pause, Download, Mail, Bell, Search, Video, Calendar, Flag, LayoutDashboard, CheckSquare, Users, BarChart3, Settings, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
 import { TopBar } from './TopBar';
 
-const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick }: any) => (
+const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hideArrow }: any) => (
   <motion.div 
     onClick={onClick}
     className={cn(
       "p-6 rounded-[32px] relative overflow-hidden flex flex-col justify-between h-44 shadow-sm group border transition-all duration-500",
       color === 'green' 
-        ? "bg-gradient-to-br from-[#1b5e40] to-[#0a2e1d] text-white border-transparent" 
+        ? "bg-linear-to-br from-[#1b5e40] to-[#0a2e1d] text-white border-transparent" 
         : "bg-white border-slate-100 text-slate-900 hover:shadow-xl hover:shadow-slate-200/50",
       onClick && "cursor-pointer"
     )}
@@ -27,7 +27,8 @@ const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick }: a
       </div>
       <div className={cn(
         "p-2.5 rounded-full border transition-colors",
-        color === 'green' ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-100 text-slate-400 group-hover:text-slate-900"
+        color === 'green' ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-100 text-slate-400 group-hover:text-slate-900",
+        hideArrow && "opacity-0"
       )}>
         <ArrowUpRight size={20} />
       </div>
@@ -37,7 +38,7 @@ const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick }: a
         "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
         color === 'green' ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
       )}>
-        {trend === 'up' && <ArrowUpRight size={10} />}
+        {!hideArrow && trend === 'up' && <ArrowUpRight size={10} />}
         <span>{trend === 'up' ? '5' : '2'}</span>
       </div>
       <span className={cn("text-[11px] font-medium", color === 'green' ? "text-emerald-100/60" : "text-slate-400")}>
@@ -58,6 +59,14 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
   const [timeLeft, setTimeLeft] = useState(1500); // 25 minutes
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isTaskDropdownOpen, setIsTaskDropdownOpen] = useState(false);
+  const [isTimeMenuOpen, setIsTimeMenuOpen] = useState(false);
+
+  const timeOptions = [
+    { label: 'Pomodoro (25m)', value: 1500 },
+    { label: 'Short Break (5m)', value: 300 },
+    { label: 'Long Break (15m)', value: 900 },
+    { label: 'Focus Session (50m)', value: 3000 },
+  ];
 
   useEffect(() => {
     let interval: any;
@@ -105,13 +114,19 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
 
   return (
     <div className="pb-12 space-y-10" ref={containerRef}>
-      <TopBar onProfileClick={() => onTabChange('team')} onMenuClick={onMenuClick} />
-
       {/* Dashboard Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 dashboard-item">
-        <div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-slate-400 mt-2 font-medium">Plan, prioritize, and accomplish your tasks with ease.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 dashboard-item pt-4">
+        <div className="flex items-center gap-4">
+          <button 
+             onClick={onMenuClick}
+             className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+           >
+             <Menu size={24} />
+          </button>
+          <div>
+            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+            <p className="text-slate-400 mt-2 font-medium">Plan, prioritize, and accomplish your tasks with ease.</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <button 
@@ -127,9 +142,9 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 dashboard-item">
         <StatCard title="Total Tasks" value={totalTasks} change="Increased from last month" color="green" trend="up" onClick={() => onTabChange('tasks')} />
-        <StatCard title="Completed" value={completedTasksCount} change="Increased from last month" color="white" trend="up" />
-        <StatCard title="In Progress" value={inProgressTasksCount} change="Increased from last month" color="white" trend="up" />
-        <StatCard title="Pending" value={pendingTasksCount} change="Direct attention" color="white" trend="up" />
+        <StatCard title="Completed" value={completedTasksCount} change="Increased from last month" color="white" trend="up" hideArrow={true} />
+        <StatCard title="In Progress" value={inProgressTasksCount} change="Increased from last month" color="white" trend="up" hideArrow={true} />
+        <StatCard title="Pending" value={pendingTasksCount} change="Direct attention" color="white" trend="up" hideArrow={true} />
       </div>
 
       {/* Main Grid Content */}
@@ -335,7 +350,40 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
                   </div>
                 </div>
                 
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center relative w-full">
+                  <div className="relative mb-2">
+                    <button 
+                      onClick={() => setIsTimeMenuOpen(!isTimeMenuOpen)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-emerald-100 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/20 transition-colors border border-white/10"
+                    >
+                      <Clock size={12} />
+                      Set Time
+                    </button>
+                    <AnimatePresence>
+                      {isTimeMenuOpen && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute left-1/2 -translate-x-1/2 top-8 w-40 bg-white border border-slate-100 rounded-2xl shadow-xl z-20 p-2 overflow-hidden"
+                        >
+                          {timeOptions.map(opt => (
+                            <button
+                              key={opt.label}
+                              onClick={() => {
+                                setTimeLeft(opt.value);
+                                setTimerActive(false);
+                                setIsTimeMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <div className="text-6xl font-black text-white tracking-widest">{formatTime(timeLeft)}</div>
                 </div>
 
@@ -352,7 +400,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
                    <button 
                     onClick={() => setTimerActive(!timerActive)}
                     className={cn(
-                      "flex-[2] h-14 rounded-2xl transition-all flex items-center justify-center gap-2 font-bold shadow-lg active:scale-95",
+                      "flex-2 h-14 rounded-2xl transition-all flex items-center justify-center gap-2 font-bold shadow-lg active:scale-95",
                       timerActive ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-900/40" : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-900/40"
                     )}
                    >

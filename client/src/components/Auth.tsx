@@ -217,7 +217,7 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                         </div>
 
                         <button className="w-full flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-2xl text-sm font-medium hover:bg-slate-50 transition-all">
-                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 flex-shrink-0" alt="" />
+                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 shrink-0" alt="" />
                              <span className="flex-1 text-center pr-5">Continue with Google</span>
                         </button>
 

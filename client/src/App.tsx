@@ -106,6 +106,7 @@ export default function App() {
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        taskCount={tasks.length}
       />
       
       <main className="flex-1 lg:ml-72 p-4 md:p-10 max-w-[1440px] mx-auto w-full transition-all">
@@ -127,7 +128,7 @@ export default function App() {
                 onMenuClick={() => setIsSidebarOpen(true)}
               />
             )}
-            {activeTab === 'analytics' && <Analytics onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
+            {activeTab === 'analytics' && <Analytics tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
             {activeTab === 'team' && <Team tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
             {activeTab === 'settings' && (() => {
               const userStr = localStorage.getItem('user');

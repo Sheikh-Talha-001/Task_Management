@@ -9,9 +9,10 @@ interface SidebarProps {
   onLogout: () => void;
   isOpen: boolean;
   onClose: () => void;
+  taskCount: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewTask, onLogout, isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewTask, onLogout, isOpen, onClose, taskCount }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
@@ -25,14 +26,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
       {/* Mobile Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-300",
+          "fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-60 lg:hidden transition-opacity duration-300",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
       />
 
       <div className={cn(
-        "w-72 h-screen bg-white border-r border-slate-100 flex flex-col p-8 fixed left-0 top-0 z-[70] transition-transform duration-300 lg:translate-x-0 shadow-2xl lg:shadow-none",
+        "w-72 h-screen bg-white border-r border-slate-100 flex flex-col p-8 fixed left-0 top-0 z-70 transition-transform duration-300 lg:translate-x-0 shadow-2xl lg:shadow-none",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between mb-10 pl-2">
@@ -69,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
                     {item.label}
                   </div>
                   {item.id === 'tasks' && (
-                    <span className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm shadow-emerald-500/20">12+</span>
+                    <span className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm shadow-emerald-500/20">{taskCount}</span>
                   )}
                 </button>
               ))}
