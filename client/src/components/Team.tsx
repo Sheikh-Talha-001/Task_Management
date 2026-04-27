@@ -1,30 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, Clock, Image as ImageIcon, Check, X } from 'lucide-react';
+import { Briefcase, Clock, Check, X, Menu, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
-import { TopBar } from './TopBar';
+import api from '../lib/api';
+import toast from 'react-hot-toast';
 
 export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void, onMenuClick: () => void }> = ({ tasks, onTabChange, onMenuClick }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
-    name: 'Alex Chen',
-    role: 'Lead Product Designer at Evergrow',
-    description: 'Based in San Francisco. Passionate about sustainable systems, user-centric flows, and bento-grid aesthetics. Currently leading the redesign effort for the Evergreen core platform.'
+    name: '',
+    email: '',
+    role: '',
+    description: '',
   });
 
-  const completedTasks = tasks.filter(t => t.status === 'Completed').slice(0, 4);
+  // Load real user data from localStorage on mount
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setProfile({
+        name: user.name || '',
+        email: user.email || '',
+        role: user.role || '',
+        description: user.description || '',
+      });
+    }
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data } = await api.put('/auth/profile', {
+        name: profile.name,
+        role: profile.role,
+        description: profile.description,
+      });
+      // Update localStorage so changes persist across page reloads
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : {};
+      localStorage.setItem('user', JSON.stringify({ ...user, ...data }));
+      setIsEditing(false);
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Build activity from real task data
+  const activity = useMemo(() => {
+    const items: { title: string; detail: string; date: string; color: string }[] = [];
+
+    // Completed tasks
+    tasks.filter(t => t.status === 'Completed').forEach(t => {
+      items.push({
+        title: `Completed "${t.title}"`,
+        detail: 'Moved to Completed',
+        date: t.dueDate || t.date || 'Recently',
+        color: 'bg-emerald-500',
+      });
+    });
+
+    // In Progress tasks
+    tasks.filter(t => t.status === 'In Progress').forEach(t => {
+      items.push({
+        title: `Working on "${t.title}"`,
+        detail: 'In Progress',
+        date: t.dueDate || t.date || 'Recently',
+        color: 'bg-blue-500',
+      });
+    });
+
+    // Pending tasks (recently created)
+    tasks.filter(t => t.status === 'Pending').forEach(t => {
+      items.push({
+        title: `Created "${t.title}"`,
+        detail: 'New task added',
+        date: t.dueDate || t.date || 'Recently',
+        color: 'bg-amber-400',
+      });
+    });
+
+    return items.slice(0, 6);
+  }, [tasks]);
+
+  // Professional stats from real data
+  const stats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'Completed').length;
+    const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, inProgress, completionRate };
+  }, [tasks]);
+
+  // Weekly goal: % of tasks completed this week
+  const weeklyProgress = useMemo(() => {
+    const total = tasks.length;
+    if (total === 0) return 0;
+    return Math.round((stats.completed / total) * 100);
+  }, [tasks, stats]);
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="space-y-2">
-        <TopBar 
-          onProfileClick={() => onTabChange('team')} 
-          onMenuClick={onMenuClick}
-          showSearch={false}
-          title="My Profile"
-        />
-        <p className="text-slate-500 text-sm font-medium pl-1">Manage your professional identity and activity.</p>
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 shadow-sm transition-all active:scale-95"
+        >
+          <Menu size={24} />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Profile</h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">Manage your professional identity and activity.</p>
+        </div>
       </div>
 
       {/* Profile Header Card */}
@@ -33,14 +127,13 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-[32px] md:rounded-[40px] p-6 md:p-10 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10"
       >
-        <div className="absolute top-0 left-0 w-full h-24 md:h-32 bg-gradient-to-r from-emerald-50 to-blue-50 opacity-60 z-0" />
+        <div className="absolute top-0 left-0 w-full h-24 md:h-32 bg-linear-to-r from-emerald-50 to-blue-50 opacity-60 z-0" />
         
-        <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 md:border-8 border-white shadow-xl z-10 shrink-0">
-          <img 
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&auto=format&fit=crop" 
-            alt={profile.name} 
-            className="w-full h-full object-cover"
-          />
+        {/* Avatar */}
+        <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 md:border-8 border-white shadow-xl z-10 shrink-0 bg-emerald-500 flex items-center justify-center">
+          <span className="text-5xl md:text-6xl font-bold text-white">
+            {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+          </span>
         </div>
 
         <div className="flex-1 text-center md:text-left z-10 pt-2 md:pt-6">
@@ -53,33 +146,54 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-4"
               >
-                <input 
-                  type="text" 
-                  value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  className="w-full text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight bg-white/50 border-2 border-emerald-500/20 rounded-2xl px-4 py-2 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all"
-                />
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <Briefcase size={18} />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
                   <input 
                     type="text" 
-                    value={profile.role}
-                    onChange={(e) => setProfile({ ...profile, role: e.target.value })}
-                    className="w-full font-semibold text-sm bg-white/50 border-2 border-emerald-500/20 rounded-xl px-3 py-1 focus:outline-none focus:border-emerald-500 transition-all"
+                    value={profile.name}
+                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    className="w-full text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight bg-white/50 border-2 border-emerald-500/20 rounded-2xl px-4 py-2 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all"
                   />
                 </div>
-                <textarea 
-                  value={profile.description}
-                  onChange={(e) => setProfile({ ...profile, description: e.target.value })}
-                  className="w-full text-slate-500 mt-4 leading-relaxed text-sm bg-white/50 border-2 border-emerald-500/20 rounded-2xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-all resize-none h-32 md:h-24"
-                />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email</label>
+                  <input 
+                    type="email" 
+                    value={profile.email}
+                    disabled
+                    className="w-full font-semibold text-sm text-slate-400 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 cursor-not-allowed"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Role / Title</label>
+                  <div className="flex items-center gap-2">
+                    <Briefcase size={18} className="text-emerald-700 shrink-0" />
+                    <input 
+                      type="text" 
+                      value={profile.role}
+                      onChange={(e) => setProfile({ ...profile, role: e.target.value })}
+                      placeholder="e.g., Full Stack Developer"
+                      className="w-full font-semibold text-sm bg-white/50 border-2 border-emerald-500/20 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-300"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Bio</label>
+                  <textarea 
+                    value={profile.description}
+                    onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                    placeholder="Write something about yourself…"
+                    className="w-full text-slate-500 leading-relaxed text-sm bg-white/50 border-2 border-emerald-500/20 rounded-2xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-all resize-none h-32 md:h-24 placeholder:text-slate-300"
+                  />
+                </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button 
-                    onClick={() => setIsEditing(false)}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-[#006644] text-white rounded-full font-bold shadow-lg shadow-emerald-900/10 hover:bg-[#005236] transition-all"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-[#006644] text-white rounded-full font-bold shadow-lg shadow-emerald-900/10 hover:bg-[#005236] transition-all disabled:opacity-50"
                   >
-                    <Check size={18} />
-                    Save Changes
+                    <Save size={18} />
+                    {saving ? 'Saving…' : 'Save Changes'}
                   </button>
                   <button 
                     onClick={() => setIsEditing(false)}
@@ -96,22 +210,24 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight">{profile.name}</h2>
-                <div className="flex items-center justify-center md:justify-start gap-2 mt-3 text-emerald-700">
-                  <Briefcase size={18} />
-                  <span className="font-semibold text-sm">{profile.role}</span>
-                </div>
-                <p className="text-slate-500 max-w-2xl mt-4 leading-relaxed text-sm">
-                  {profile.description}
-                </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight">{profile.name || 'User'}</h2>
+                <p className="text-sm text-slate-400 font-medium mt-1">{profile.email}</p>
+                {profile.role && (
+                  <div className="flex items-center justify-center md:justify-start gap-2 mt-3 text-emerald-700">
+                    <Briefcase size={18} />
+                    <span className="font-semibold text-sm">{profile.role}</span>
+                  </div>
+                )}
+                {profile.description && (
+                  <p className="text-slate-500 max-w-2xl mt-4 leading-relaxed text-sm">{profile.description}</p>
+                )}
+                <div className="mt-8 flex justify-center md:justify-start">
                   <button 
                     onClick={() => setIsEditing(true)}
                     className="px-8 py-3.5 bg-[#006644] text-white rounded-full font-bold shadow-lg shadow-emerald-900/20 hover:scale-105 transition-transform active:scale-95"
                   >
                     Edit Profile
                   </button>
-                  <button className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-full font-bold hover:bg-slate-50 transition-colors">View Public</button>
                 </div>
               </motion.div>
             )}
@@ -124,36 +240,22 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
         <div className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-slate-100">
           <h3 className="text-xl font-bold text-slate-900 mb-8">Recent Activity</h3>
           <div className="relative border-l-2 border-slate-50 ml-2 md:ml-4 space-y-10">
-            {completedTasks.length > 0 ? completedTasks.map((task, i) => (
-              <div key={task.id} className="relative pl-8">
-                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-[#006644] ring-4 ring-white" />
+            {activity.length > 0 ? activity.map((item, i) => (
+              <div key={i} className="relative pl-8">
+                <div className={cn("absolute left-[-9px] top-1 w-4 h-4 rounded-full ring-4 ring-white", item.color)} />
                 <div className="mb-1">
-                  <span className="font-bold text-slate-900 text-sm">Completed {task.title}</span>
+                  <span className="font-bold text-slate-900 text-sm">{item.title}</span>
                 </div>
-                <div className="text-xs text-slate-500 mb-2">Moved to 'Completed'</div>
+                <div className="text-xs text-slate-500 mb-2">{item.detail}</div>
                 <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400 flex items-center gap-1">
                   <Clock size={12} />
-                  {task.dueDate || task.date || 'Recently'}
+                  {item.date}
                 </div>
               </div>
             )) : (
-                <p className="text-slate-400 text-sm italic pl-4">No recent completion activity.</p>
+              <p className="text-slate-400 text-sm italic pl-4">No activity yet. Create some tasks!</p>
             )}
-
-            <div className="relative pl-8">
-              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-200 ring-4 ring-white" />
-              <div className="mb-1">
-                <span className="font-bold text-slate-900 text-sm">Joined Evergrow Workspace</span>
-              </div>
-              <div className="font-label-caps text-slate-400 text-[10px] tracking-widest flex items-center gap-1">
-                <Clock size={12} />
-                Sep 1, 2023
-              </div>
-            </div>
           </div>
-          <button className="w-full mt-10 py-4 font-bold text-[#006644] hover:bg-emerald-50 rounded-2xl transition-colors border border-dashed border-emerald-100">
-            View All Activity
-          </button>
         </div>
 
         {/* Stats Grid */}
@@ -162,19 +264,19 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
             <h3 className="text-xl font-bold mb-8">Professional Stats</h3>
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-2">
-                <span className="text-4xl font-bold">{tasks.length}</span>
+                <span className="text-4xl font-bold">{stats.total}</span>
                 <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Total Tasks</p>
               </div>
               <div className="space-y-2">
-                <span className="text-4xl font-bold text-emerald-400">{tasks.filter(t => t.status === 'Completed').length}</span>
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Solved</p>
+                <span className="text-4xl font-bold text-emerald-400">{stats.completed}</span>
+                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Completed</p>
               </div>
               <div className="space-y-2">
-                <span className="text-4xl font-bold">12</span>
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Projects</p>
+                <span className="text-4xl font-bold text-blue-400">{stats.inProgress}</span>
+                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">In Progress</p>
               </div>
               <div className="space-y-2">
-                <span className="text-4xl font-bold text-blue-400">98%</span>
+                <span className="text-4xl font-bold text-amber-400">{stats.completionRate}%</span>
                 <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">On Time</p>
               </div>
             </div>
@@ -183,7 +285,9 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
           <div className="bg-white p-10 rounded-[40px] border border-slate-100 flex items-center justify-between">
             <div>
                 <h3 className="font-bold text-slate-900">Weekly Goal</h3>
-                <p className="text-xs text-slate-500 mt-1">8 tasks remaining this week</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {tasks.length - stats.completed} tasks remaining
+                </p>
             </div>
             <div className="relative w-16 h-16 flex items-center justify-center">
                  <svg className="w-full h-full -rotate-90">
@@ -195,11 +299,11 @@ export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void,
                         cx="32" cy="32" r="28" 
                         stroke="#006644" strokeWidth="6" fill="none" 
                         strokeDasharray={2 * Math.PI * 28}
-                        strokeDashoffset={2 * Math.PI * 28 * 0.4}
+                        strokeDashoffset={2 * Math.PI * 28 * (1 - weeklyProgress / 100)}
                         strokeLinecap="round"
                     />
                  </svg>
-                 <span className="absolute text-xs font-bold text-[#006644]">60%</span>
+                 <span className="absolute text-xs font-bold text-[#006644]">{weeklyProgress}%</span>
             </div>
           </div>
         </div>

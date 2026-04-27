@@ -360,7 +360,6 @@ export const Tasks: React.FC<{
   tasks: Task[], 
   onNewTask: () => void, 
   onTaskClick: (task: Task) => void,
-  onProfileClick: () => void,
   onMenuClick: () => void
 }> = ({ tasks, onNewTask, onTaskClick, onMenuClick }) => {
   const [searchQuery, setSearchQuery] = React.useState('');

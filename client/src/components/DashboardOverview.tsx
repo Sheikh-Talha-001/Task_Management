@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
-import { TopBar } from './TopBar';
+
 
 const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hideArrow }: any) => (
   <motion.div 

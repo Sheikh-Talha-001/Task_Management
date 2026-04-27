@@ -26,6 +26,20 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
     },
+
+    // Optional role/title
+    role: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+
+    // Optional bio/description
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     // Automatically add createdAt and updatedAt fields

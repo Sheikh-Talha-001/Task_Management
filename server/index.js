@@ -76,6 +76,9 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);   // Public: register & login
 app.use('/api/tasks', taskRoutes);  // Protected: requires JWT
 
+const feedbackRoutes = require('./routes/feedbackRoutes');
+app.use('/api/feedback', feedbackRoutes); // Protected: feedback submissions
+
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ message: `Route '${req.originalUrl}' not found` });
