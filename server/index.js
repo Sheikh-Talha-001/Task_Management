@@ -17,8 +17,13 @@ const cors = require('cors');
 
 const app = express();
 
-// Enable CORS for all routes (to allow requests from the Vite frontend)
-app.use(cors());
+// Enable CORS with restricted origin in production
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
+app.use(cors({
+  origin: allowedOrigin,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // ─── Connect to MongoDB ───────────────────────────────────────────────────────
 connectDB();

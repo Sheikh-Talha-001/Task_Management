@@ -69,6 +69,7 @@ Create a `.env` file in the `server` directory and add the following:
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
+ALLOWED_ORIGIN=http://localhost:3000
 ```
 Start the backend server:
 ```bash
@@ -80,6 +81,10 @@ Open a new terminal window:
 ```bash
 cd client
 npm install
+```
+Create a `.env` file in the `client` directory and add:
+```env
+VITE_API_URL=http://localhost:5000/api
 ```
 Start the frontend development server:
 ```bash
