@@ -17,6 +17,7 @@ import { TaskDetails } from './components/TaskDetails';
 import { motion, AnimatePresence } from 'motion/react';
 import { Task } from './types';
 import api from './lib/api';
+import axios from 'axios';
 import { Toaster } from 'react-hot-toast';
 import { SettingsProvider } from './context/SettingsContext';
 
@@ -27,6 +28,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,19 +45,21 @@ export default function App() {
     return () => window.removeEventListener('auth-error', handleAuthError);
   }, []);
 
+  const fetchTasks = async (search = '') => {
+    try {
+      const { data } = await api.get('/tasks', { params: { search } });
+      setTasks(data);
+    } catch (error) {
+      if (axios.isCancel(error)) return; // Ignore canceled requests
+      console.error("Failed to fetch tasks:", error);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchTasks = async () => {
-        try {
-          const { data } = await api.get('/tasks');
-          setTasks(data);
-        } catch (error) {
-          console.error("Failed to fetch tasks:", error);
-        }
-      };
-      fetchTasks();
+      fetchTasks(globalSearchQuery);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, globalSearchQuery]);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -129,6 +133,7 @@ export default function App() {
                 onNewTask={() => setIsNewTaskModalOpen(true)} 
                 onTaskClick={setSelectedTask} 
                 onMenuClick={() => setIsSidebarOpen(true)}
+                onSearch={setGlobalSearchQuery}
               />
             )}
             {activeTab === 'analytics' && <Analytics tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}

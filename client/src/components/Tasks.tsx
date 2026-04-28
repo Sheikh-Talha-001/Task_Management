@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
 import { useSettings } from '../context/SettingsContext';
+import { SearchBar } from './SearchBar';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,7 @@ const buildNotifications = (tasks: Task[]): Notification[] => {
 
 // ─── TaskCard ─────────────────────────────────────────────────────────────────
 
-const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick }) => {
+export const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick }) => {
   const pCfg = task.priority ? priorityConfig[task.priority] : null;
 
   return (
@@ -361,10 +362,10 @@ export const Tasks: React.FC<{
   tasks: Task[], 
   onNewTask: () => void, 
   onTaskClick: (task: Task) => void,
-  onMenuClick: () => void
-}> = ({ tasks, onNewTask, onTaskClick, onMenuClick }) => {
+  onMenuClick: () => void,
+  onSearch?: (query: string) => void
+}> = ({ tasks, onNewTask, onTaskClick, onMenuClick, onSearch }) => {
   const { pushNotifications } = useSettings();
-  const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<string>('All');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -386,13 +387,10 @@ export const Tasks: React.FC<{
             { opacity: 1, y: 0, scale: 1, stagger: 0.05, duration: 0.6, ease: "power2.out", clearProps: "all" }
         );
     }
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, tasks]);
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return statusFilter === 'All' || task.status === statusFilter;
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -413,16 +411,9 @@ export const Tasks: React.FC<{
           >
             <Menu size={24} />
           </button>
-          <div className="relative group flex-1">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search tasks…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-16 pr-6 py-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
-            />
-          </div>
+          {onSearch && (
+            <SearchBar onSearch={onSearch} placeholder="Search tasks..." debounceMs={500} />
+          )}
         </div>
 
         {/* Right: time tracker + notification bell */}

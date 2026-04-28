@@ -52,6 +52,9 @@ const taskSchema = new mongoose.Schema(
   }
 );
 
+// Add compound index to optimize querying tasks by user and filtering by status
+taskSchema.index({ user: 1, status: 1 });
+
 // Create and export the Task model
 const Task = mongoose.model('Task', taskSchema);
 

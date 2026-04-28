@@ -92,8 +92,22 @@ const createTask = async (req, res) => {
 // @access  Private
 const getTasks = async (req, res) => {
   try {
-    // Only return tasks that belong to the authenticated user
-    const tasks = await Task.find({ user: req.user._id });
+    const { search } = req.query;
+    
+    // Base query: Only return tasks that belong to the authenticated user
+    const query = { user: req.user._id };
+
+    // Apply search filter if provided
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Execute query with .lean() for faster, read-only JSON responses
+    const tasks = await Task.find(query).lean();
+    
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
