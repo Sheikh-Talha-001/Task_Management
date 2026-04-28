@@ -1,4 +1,4 @@
-# Donezo - Task Management Dashboard
+# Donezo - Task Management System
 
 Donezo is a production-ready, full-stack Task Management Dashboard built to help individuals and teams organize their workflow efficiently. 
 It features a stunning, highly responsive user interface with dynamic animations, comprehensive analytics, global settings (including true Dark Mode and i18n), and robust backend security.
@@ -55,7 +55,7 @@ It features a stunning, highly responsive user interface with dynamic animations
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-github-repo-url>
+git clone https://github.com/Sheikh-Talha-001/Task_Management
 cd Task_Management
 ```
 
