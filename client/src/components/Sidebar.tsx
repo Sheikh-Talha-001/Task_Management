@@ -1,10 +1,9 @@
 import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, Users, BarChart3, Settings, HelpCircle, Plus, LogOut, Leaf } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   onNewTask: () => void;
   onLogout: () => void;
   isOpen: boolean;
@@ -12,7 +11,10 @@ interface SidebarProps {
   taskCount: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewTask, onLogout, isOpen, onClose, taskCount }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onNewTask, onLogout, isOpen, onClose, taskCount }) => {
+  const location = useLocation();
+  const currentPath = location.pathname.substring(1) || 'dashboard';
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
@@ -52,12 +54,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
             <h3 className="px-4 text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-4">Menu</h3>
             <nav className="space-y-1">
               {navItems.filter(i => ['dashboard', 'tasks', 'calendar', 'analytics', 'team'].includes(i.id)).map((item) => (
-                <button
+                <NavLink
                   key={item.id}
-                  onClick={() => onTabChange(item.id)}
-                  className={cn(
+                  to={`/${item.id}`}
+                  onClick={onClose}
+                  className={({ isActive }) => cn(
                     "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group",
-                    activeTab === item.id 
+                    isActive 
                       ? "bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
                       : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
                   )}
@@ -65,14 +68,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
                   <div className="flex items-center gap-3">
                     <item.icon size={20} className={cn(
                         "transition-colors",
-                        activeTab === item.id ? "text-slate-900 dark:text-white" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
+                        currentPath === item.id ? "text-slate-900 dark:text-white" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
                     )} />
                     {item.label}
                   </div>
                   {item.id === 'tasks' && (
                     <span className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm shadow-emerald-500/20">{taskCount}</span>
                   )}
-                </button>
+                </NavLink>
               ))}
             </nav>
           </div>
@@ -80,29 +83,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
           <div className="mb-8">
             <h3 className="px-4 text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-4">General</h3>
             <nav className="space-y-1">
-              {['settings', 'help', 'logout'].map((id) => {
+              {['settings', 'help'].map((id) => {
                 const label = id.charAt(0).toUpperCase() + id.slice(1);
-                const Icon = id === 'settings' ? Settings : id === 'help' ? HelpCircle : LogOut;
+                const Icon = id === 'settings' ? Settings : HelpCircle;
                 return (
-                  <button
+                  <NavLink
                     key={id}
-                    onClick={() => id === 'logout' ? onLogout() : onTabChange(id)}
-                    className={cn(
+                    to={`/${id}`}
+                    onClick={onClose}
+                    className={({ isActive }) => cn(
                       "w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group",
-                      activeTab === id 
+                      isActive 
                         ? "bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                        : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700",
-                      id === 'logout' && "text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                        : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
                     )}
                   >
                     <Icon size={20} className={cn(
                         "transition-colors",
-                        activeTab === id ? "text-slate-900 dark:text-white" : id === 'logout' ? "text-rose-500" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
+                        currentPath === id ? "text-slate-900 dark:text-white" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white"
                     )} />
                     {label}
-                  </button>
+                  </NavLink>
                 );
               })}
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+              >
+                <LogOut size={20} className="transition-colors text-rose-500" />
+                Logout
+              </button>
             </nav>
           </div>
         </div>
@@ -110,3 +120,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onNewT
     </>
   );
 };
+

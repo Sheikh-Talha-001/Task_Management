@@ -72,9 +72,8 @@ const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: an
 
 export const Analytics: React.FC<{
   tasks: Task[];
-  onTabChange: (tab: string) => void;
   onMenuClick: () => void;
-}> = ({ tasks, onTabChange, onMenuClick }) => {
+}> = ({ tasks, onMenuClick }) => {
   const [range, setRange] = useState<number>(7);
 
   // ── Computed metrics ──────────────────────────────────────────────────────

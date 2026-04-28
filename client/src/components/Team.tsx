@@ -6,7 +6,7 @@ import { Task } from '../types';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 
-export const Team: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void, onMenuClick: () => void }> = ({ tasks, onTabChange, onMenuClick }) => {
+export const Team: React.FC<{ tasks: Task[], onMenuClick: () => void }> = ({ tasks, onMenuClick }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({

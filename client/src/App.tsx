@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/DashboardOverview';
 import { Tasks } from './components/Tasks';
@@ -18,17 +19,30 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Task } from './types';
 import api from './lib/api';
 import axios from 'axios';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { SettingsProvider } from './context/SettingsContext';
+
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.2 }}
+  >
+    {children}
+  </motion.div>
+);
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -38,12 +52,12 @@ export default function App() {
 
     const handleAuthError = () => {
       setIsAuthenticated(false);
-      setActiveTab('dashboard');
+      navigate('/auth');
     };
 
     window.addEventListener('auth-error', handleAuthError);
     return () => window.removeEventListener('auth-error', handleAuthError);
-  }, []);
+  }, [navigate]);
 
   const fetchTasks = async (search = '') => {
     try {
@@ -63,14 +77,15 @@ export default function App() {
 
   const handleLogin = () => {
     setIsAuthenticated(true);
+    navigate('/dashboard');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
-    setActiveTab('dashboard');
     setIsSidebarOpen(false);
+    navigate('/auth');
   };
 
   const handleCreateTask = async (newTask: Omit<Task, '_id'>) => {
@@ -78,9 +93,11 @@ export default function App() {
       const { data } = await api.post('/tasks', newTask);
       setTasks(prev => [data, ...prev]);
       setIsNewTaskModalOpen(false);
-      setActiveTab('tasks');
+      navigate('/tasks');
+      toast.success('Task created successfully');
     } catch (error) {
       console.error("Failed to create task:", error);
+      toast.error('Failed to create task');
     }
   };
 
@@ -89,24 +106,45 @@ export default function App() {
       const { data } = await api.put(`/tasks/${updatedTask._id}`, updatedTask);
       setTasks(prev => prev.map(t => t._id === updatedTask._id ? data : t));
       setSelectedTask(null);
+      toast.success('Task updated successfully');
     } catch (error) {
       console.error("Failed to update task:", error);
+      toast.error('Failed to update task');
     }
   };
 
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await api.delete(`/tasks/${id}`);
+      setTasks(prev => prev.filter(t => t._id !== id));
+      toast.success('Task deleted successfully');
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      toast.error('Failed to delete task');
+    }
+  };
+
+  if (!isAuthenticated && location.pathname !== '/auth') {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (isAuthenticated && location.pathname === '/auth') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (!isAuthenticated) {
-    return <Auth onLogin={handleLogin} />;
+    return (
+      <Routes>
+        <Route path="/auth" element={<Auth onLogin={handleLogin} />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
+      </Routes>
+    );
   }
 
   return (
     <SettingsProvider>
     <div className="flex bg-[#f8fafc] dark:bg-slate-900 min-h-screen font-sans selection:bg-emerald-600/10 selection:text-emerald-600 overflow-x-hidden transition-colors duration-300">
       <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          setIsSidebarOpen(false);
-        }} 
         onNewTask={() => {
           setIsNewTaskModalOpen(true);
           setIsSidebarOpen(false);
@@ -119,28 +157,27 @@ export default function App() {
       
       <main className="flex-1 lg:ml-72 p-4 md:p-10 max-w-[1440px] mx-auto w-full transition-all">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeTab === 'dashboard' && <Dashboard tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
-            {activeTab === 'tasks' && (
-              <Tasks 
-                tasks={tasks} 
-                onNewTask={() => setIsNewTaskModalOpen(true)} 
-                onTaskClick={setSelectedTask} 
-                onMenuClick={() => setIsSidebarOpen(true)}
-                onSearch={setGlobalSearchQuery}
-              />
-            )}
-            {activeTab === 'analytics' && <Analytics tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
-            {activeTab === 'team' && <Team tasks={tasks} onTabChange={setActiveTab} onMenuClick={() => setIsSidebarOpen(true)} />}
-            {activeTab === 'settings' && <Settings onLogout={handleLogout} onMenuClick={() => setIsSidebarOpen(true)} />}
-            {activeTab === 'help' && <Help onMenuClick={() => setIsSidebarOpen(true)} />}
-          </motion.div>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<PageWrapper><Dashboard tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/tasks" element={
+              <PageWrapper>
+                <Tasks 
+                  tasks={tasks} 
+                  onNewTask={() => setIsNewTaskModalOpen(true)} 
+                  onTaskClick={setSelectedTask} 
+                  onMenuClick={() => setIsSidebarOpen(true)}
+                  onSearch={setGlobalSearchQuery}
+                  onDeleteTask={handleDeleteTask}
+                />
+              </PageWrapper>
+            } />
+            <Route path="/analytics" element={<PageWrapper><Analytics tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/team" element={<PageWrapper><Team tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/settings" element={<PageWrapper><Settings onLogout={handleLogout} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/help" element={<PageWrapper><Help onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </AnimatePresence>
       </main>
 

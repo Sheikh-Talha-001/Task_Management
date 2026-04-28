@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { ArrowUpRight, CheckCircle2, RefreshCw, Clock, MoreHorizontal, Plus, RotateCcw, Play, Pause, Download, Mail, Bell, Search, Video, Calendar, Flag, LayoutDashboard, CheckSquare, Users, BarChart3, Settings, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -52,8 +53,9 @@ const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hid
   </motion.div>
 );
 
-export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => void, onMenuClick: () => void }> = ({ tasks, onTabChange, onMenuClick }) => {
+export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = ({ tasks, onMenuClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Time Tracker State
   const [timerActive, setTimerActive] = useState(false);
@@ -131,7 +133,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
         </div>
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => onTabChange('tasks')}
+            onClick={() => navigate('/tasks')}
             className="px-6 py-3.5 bg-[#0a2e1d] hover:bg-[#1b5e40] text-white rounded-2xl flex items-center gap-2.5 font-bold transition-all shadow-xl shadow-emerald-900/10 active:scale-95"
           >
             <Plus size={20} strokeWidth={2.5} />
@@ -142,7 +144,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 dashboard-item">
-        <StatCard title="Total Tasks" value={totalTasks} change="Increased from last month" color="green" trend="up" onClick={() => onTabChange('tasks')} />
+        <StatCard title="Total Tasks" value={totalTasks} change="Increased from last month" color="green" trend="up" onClick={() => navigate('/tasks')} />
         <StatCard title="Completed" value={completedTasksCount} change="Increased from last month" color="white" trend="up" hideArrow={true} />
         <StatCard title="In Progress" value={inProgressTasksCount} change="Increased from last month" color="white" trend="up" hideArrow={true} />
         <StatCard title="Pending" value={pendingTasksCount} change="Direct attention" color="white" trend="up" hideArrow={true} />
@@ -214,14 +216,14 @@ export const Dashboard: React.FC<{ tasks: Task[], onTabChange: (tab: string) => 
             <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 p-8 shadow-sm">
                 <div className="flex justify-between items-center mb-10">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Tasks</h3>
-                  <button onClick={() => onTabChange('tasks')} className="text-[#0a2e1d] text-xs font-bold uppercase tracking-wider hover:underline">
+                  <button onClick={() => navigate('/tasks')} className="text-[#0a2e1d] text-xs font-bold uppercase tracking-wider hover:underline">
                     View All
                   </button>
                 </div>
                 <div className="space-y-6">
                   {tasks.length > 0 ? (
                     tasks.slice(0, 4).map((task, i) => (
-                      <div key={i} onClick={() => onTabChange('tasks')} className="flex items-center justify-between group cursor-pointer">
+                      <div key={i} onClick={() => navigate('/tasks')} className="flex items-center justify-between group cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className={cn(
                             "w-11 h-11 rounded-full flex items-center justify-center border-2 border-white shadow-sm ring-2",

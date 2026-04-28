@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, Bell, Calendar, Clock, Plus, Play, Pause, RotateCcw, Menu, Flag } from 'lucide-react';
+import { Search, Bell, Calendar, Clock, Plus, Play, Pause, RotateCcw, Menu, Flag, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { cn } from '../lib/utils';
@@ -81,7 +81,7 @@ const buildNotifications = (tasks: Task[]): Notification[] => {
 
 // ─── TaskCard ─────────────────────────────────────────────────────────────────
 
-export const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, onClick }) => {
+export const TaskCard: React.FC<{ task: Task; onClick: () => void; onDelete: () => void }> = ({ task, onClick, onDelete }) => {
   const pCfg = task.priority ? priorityConfig[task.priority] : null;
 
   return (
@@ -124,13 +124,27 @@ export const TaskCard: React.FC<{ task: Task; onClick: () => void }> = ({ task, 
           <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed font-medium">{task.description}</p>
           </div>
 
-          {/* Priority badge */}
-          {pCfg && (
-            <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider", pCfg.bg, pCfg.text)}>
-              <span className={cn("w-1.5 h-1.5 rounded-full", pCfg.dot)} />
-              {task.priority}
-            </div>
-          )}
+          {/* Priority badge & Delete icon */}
+          <div className="flex items-center justify-between">
+            {pCfg && (
+              <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider", pCfg.bg, pCfg.text)}>
+                <span className={cn("w-1.5 h-1.5 rounded-full", pCfg.dot)} />
+                {task.priority}
+              </div>
+            )}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this task?')) {
+                  onDelete();
+                }
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+              title="Delete Task"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
       </div>
 
       <div className="pt-4 border-t border-slate-50 dark:border-slate-700 flex justify-between items-center mt-auto">
@@ -363,8 +377,9 @@ export const Tasks: React.FC<{
   onNewTask: () => void, 
   onTaskClick: (task: Task) => void,
   onMenuClick: () => void,
-  onSearch?: (query: string) => void
-}> = ({ tasks, onNewTask, onTaskClick, onMenuClick, onSearch }) => {
+  onSearch?: (query: string) => void,
+  onDeleteTask: (id: string) => void
+}> = ({ tasks, onNewTask, onTaskClick, onMenuClick, onSearch, onDeleteTask }) => {
   const { pushNotifications } = useSettings();
   const [statusFilter, setStatusFilter] = React.useState<string>('All');
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -486,7 +501,7 @@ export const Tasks: React.FC<{
       {/* ── Task Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {filteredTasks.map(task => (
-           <TaskCard key={task._id} task={task} onClick={() => onTaskClick(task)} />
+           <TaskCard key={task._id} task={task} onClick={() => onTaskClick(task)} onDelete={() => onDeleteTask(task._id)} />
         ))}
         <motion.button 
           whileHover={{ scale: 0.98 }}

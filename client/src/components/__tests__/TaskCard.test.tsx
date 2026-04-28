@@ -10,9 +10,9 @@ describe('TaskCard Component', () => {
     description: 'Implement Node.js controllers and routes',
     status: 'In Progress',
     priority: 'High',
-    user: 'user123',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    // user: 'user123',
+    // createdAt: new Date().toISOString(),
+    // updatedAt: new Date().toISOString()
   };
 
   it('should render the task title', () => {
