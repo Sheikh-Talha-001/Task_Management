@@ -1,36 +1,93 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell
+  BarChart,
+  Bar,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import {
-  ArrowUpRight, ArrowDownRight, Zap, Package, Gauge,
-  TrendingUp, TrendingDown, Menu, Download
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Download,
+  Gauge,
+  Menu,
+  Package,
+  PieChart as PieChartIcon,
+  RefreshCw,
+  Sprout,
+  TrendingUp,
+  Zap,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
+import api from '../lib/api';
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+type AnalyticsRange = 7 | 30;
+type StatusName = 'Pending' | 'In Progress' | 'Completed';
 
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+interface StatusBreakdownItem {
+  name: StatusName;
+  value: number;
+  percentage: number;
+}
 
-/** Get a Date object from any task date field */
-const parseTaskDate = (task: Task): Date | null => {
-  const raw = task.dueDate || task.date;
-  if (!raw || raw === 'No Date') return null;
-  const d = new Date(raw);
-  return isNaN(d.getTime()) ? null : d;
+interface AnalyticsOverview {
+  range: AnalyticsRange | 'all';
+  totalTasks: number;
+  completionPercentage: number;
+  statusCounts: Record<StatusName, number>;
+  statusBreakdown: StatusBreakdownItem[];
+}
+
+interface TrendPoint {
+  label: string;
+  completed: number;
+  overdue: number;
+}
+
+interface AnalyticsTrends {
+  range: AnalyticsRange;
+  bucketType: 'daily' | 'weekly';
+  trends: TrendPoint[];
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+const emptyOverview = (range: AnalyticsRange): AnalyticsOverview => ({
+  range,
+  totalTasks: 0,
+  completionPercentage: 0,
+  statusCounts: {
+    Pending: 0,
+    'In Progress': 0,
+    Completed: 0,
+  },
+  statusBreakdown: [
+    { name: 'Pending', value: 0, percentage: 0 },
+    { name: 'In Progress', value: 0, percentage: 0 },
+    { name: 'Completed', value: 0, percentage: 0 },
+  ],
+});
+
+const statusColors: Record<StatusName, string> = {
+  Pending: '#94a3b8',
+  'In Progress': '#10b981',
+  Completed: '#006644',
 };
-
-/** Check if a date falls within the last N days from now */
-const withinDays = (d: Date, n: number): boolean => {
-  const now = new Date();
-  const cutoff = new Date(now.getTime() - n * 86400000);
-  return d >= cutoff;
-};
-
-// ─── MetricCard ────────────────────────────────────────────────────────────────
 
 const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: any) => (
   <motion.div
@@ -50,7 +107,7 @@ const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: an
       )}>
         <Icon size={18} />
       </div>
-      <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wider">{title}</h3>
+      <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{title}</h3>
     </div>
 
     <div className="flex items-baseline gap-2">
@@ -68,99 +125,93 @@ const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: an
   </motion.div>
 );
 
-// ─── Main Component ────────────────────────────────────────────────────────────
+const NoDataPanel = ({ title, detail }: { title: string; detail: string }) => (
+  <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center rounded-[24px] border border-dashed border-emerald-100 dark:border-slate-700 bg-emerald-50/40 dark:bg-slate-900/30 p-6">
+    <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-800 border border-emerald-100 dark:border-slate-700 shadow-sm flex items-center justify-center mb-4">
+      <Sprout className="text-[#006644]" size={28} />
+    </div>
+    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h4>
+    <p className="text-xs text-slate-400 max-w-xs mt-2 leading-relaxed">{detail}</p>
+  </div>
+);
 
 export const Analytics: React.FC<{
   tasks: Task[];
   onMenuClick: () => void;
-}> = ({ tasks, onMenuClick }) => {
-  const [range, setRange] = useState<number>(7);
+}> = ({ onMenuClick }) => {
+  const [range, setRange] = useState<AnalyticsRange>(7);
+  const [overview, setOverview] = useState<AnalyticsOverview>(emptyOverview(7));
+  const [trends, setTrends] = useState<AnalyticsTrends>({
+    range: 7,
+    bucketType: 'daily',
+    trends: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // ── Computed metrics ──────────────────────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchAnalytics = async () => {
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const [overviewResponse, trendsResponse] = await Promise.all([
+          api.get<ApiResponse<AnalyticsOverview>>('/analytics/overview', { params: { range } }),
+          api.get<ApiResponse<AnalyticsTrends>>('/analytics/trends', { params: { range } }),
+        ]);
+
+        if (!isMounted) return;
+
+        setOverview(overviewResponse.data.data);
+        setTrends(trendsResponse.data.data);
+      } catch (error: any) {
+        if (!isMounted || error?.name === 'CanceledError') return;
+
+        console.error('Failed to fetch analytics:', error);
+        setOverview(emptyOverview(range));
+        setTrends({ range, bucketType: range === 7 ? 'daily' : 'weekly', trends: [] });
+        setErrorMessage(error?.response?.data?.message || 'Unable to load analytics right now.');
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAnalytics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [range]);
 
   const metrics = useMemo(() => {
-    const total = tasks.length;
-    const completed = tasks.filter(t => t.status === 'Completed').length;
-    const inProgress = tasks.filter(t => t.status === 'In Progress').length;
-    const pending = tasks.filter(t => t.status === 'Pending').length;
-
-    const efficiency = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const completed = overview.statusCounts.Completed;
+    const pending = overview.statusCounts.Pending;
+    const inProgress = overview.statusCounts['In Progress'];
     const velocity = range > 0 ? +(completed / range).toFixed(1) : 0;
 
-    return { total, completed, inProgress, pending, efficiency, velocity };
-  }, [tasks, range]);
+    return {
+      total: overview.totalTasks,
+      completed,
+      pending,
+      inProgress,
+      efficiency: overview.completionPercentage,
+      velocity,
+    };
+  }, [overview, range]);
 
-  // ── 7-day / 30-day performance trend ──────────────────────────────────────
-
-  const performanceData = useMemo(() => {
-    const days: { name: string; completed: number; created: number }[] = [];
-    const now = new Date();
-
-    for (let i = range - 1; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 86400000);
-      const dayStr = d.toISOString().split('T')[0];
-      const label = range <= 7
-        ? dayNames[d.getDay()]
-        : `${d.getDate()}/${d.getMonth() + 1}`;
-
-      const completedCount = tasks.filter(t => {
-        if (t.status !== 'Completed') return false;
-        const td = parseTaskDate(t);
-        return td && td.toISOString().split('T')[0] === dayStr;
-      }).length;
-
-      const createdCount = tasks.filter(t => {
-        const raw = (t as any).createdAt;
-        if (!raw) return false;
-        const cd = new Date(raw);
-        return !isNaN(cd.getTime()) && cd.toISOString().split('T')[0] === dayStr;
-      }).length;
-
-      days.push({ name: label, completed: completedCount, created: createdCount });
-    }
-    return days;
-  }, [tasks, range]);
-
-  // ── Priority distribution ─────────────────────────────────────────────────
-
-  const priorityData = useMemo(() => {
-    const counts = { Low: 0, Medium: 0, High: 0, Urgent: 0 };
-    tasks.forEach(t => {
-      const p = t.priority || 'Medium';
-      if (p in counts) counts[p as keyof typeof counts]++;
-    });
-    const total = tasks.length || 1;
-    return [
-      { label: 'Urgent', value: Math.round((counts.Urgent / total) * 100), color: 'bg-rose-500' },
-      { label: 'High',   value: Math.round((counts.High / total) * 100),   color: 'bg-orange-500' },
-      { label: 'Medium', value: Math.round((counts.Medium / total) * 100), color: 'bg-[#006644]' },
-      { label: 'Low',    value: Math.round((counts.Low / total) * 100),    color: 'bg-sky-400' },
-    ];
-  }, [tasks]);
-
-  // ── Status bar chart data ─────────────────────────────────────────────────
-
-  const statusData = useMemo(() => [
-    { name: 'Completed',   value: metrics.completed },
-    { name: 'In Progress', value: metrics.inProgress },
-    { name: 'Pending',     value: metrics.pending },
-  ], [metrics]);
-
-  const statusColors = ['#006644', '#10B981', '#94a3b8'];
-
-  // ── Export handler ────────────────────────────────────────────────────────
+  const hasOverviewData = overview.totalTasks > 0;
+  const hasTrendData = trends.trends.some((item) => item.completed > 0 || item.overdue > 0);
 
   const handleExport = () => {
     const payload = {
       exportedAt: new Date().toISOString(),
       range: `Last ${range} days`,
-      metrics,
-      tasks: tasks.map(t => ({
-        title: t.title,
-        status: t.status,
-        priority: t.priority || 'Medium',
-        dueDate: t.dueDate || 'No Date',
-      })),
+      overview,
+      trends,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -171,11 +222,8 @@ export const Analytics: React.FC<{
     URL.revokeObjectURL(url);
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-8 pb-12">
-      {/* Header */}
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <button
@@ -186,15 +234,15 @@ export const Analytics: React.FC<{
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Analytics Intelligence</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time performance metrics from your tasks.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Owner-only reporting powered by live aggregation data.</p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 justify-between items-center">
           <div className="flex gap-2">
             {[
-              { label: 'Last 7 Days', val: 7 },
-              { label: 'Last 30 Days', val: 30 },
+              { label: 'Last 7 Days', val: 7 as AnalyticsRange },
+              { label: 'Last 30 Days', val: 30 as AnalyticsRange },
             ].map(opt => (
               <button
                 key={opt.val}
@@ -212,19 +260,26 @@ export const Analytics: React.FC<{
           </div>
           <button
             onClick={handleExport}
-            className="px-5 py-2 bg-[#006644] text-white rounded-xl text-sm font-semibold hover:bg-[#005236] transition-colors shadow-md shadow-emerald-200 flex items-center gap-2"
+            disabled={isLoading}
+            className="px-5 py-2 bg-[#006644] disabled:bg-slate-300 text-white rounded-xl text-sm font-semibold hover:bg-[#005236] transition-colors shadow-md shadow-emerald-200 flex items-center gap-2"
           >
-            <Download size={14} />
+            {isLoading ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
             Export JSON
           </button>
         </div>
       </header>
 
-      {/* Primary Metrics */}
+      {errorMessage && (
+        <div className="bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl px-5 py-4 text-sm font-semibold flex items-center gap-3">
+          <AlertTriangle size={18} />
+          {errorMessage}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <MetricCard
           title="Completion Rate"
-          value={metrics.efficiency}
+          value={isLoading ? '...' : metrics.efficiency}
           unit="%"
           change={metrics.efficiency >= 50 ? 'On track' : 'Needs attention'}
           icon={Zap}
@@ -233,7 +288,7 @@ export const Analytics: React.FC<{
         />
         <MetricCard
           title="Completed"
-          value={metrics.completed}
+          value={isLoading ? '...' : metrics.completed}
           unit={`of ${metrics.total}`}
           change={`${metrics.pending} pending`}
           icon={Package}
@@ -242,7 +297,7 @@ export const Analytics: React.FC<{
         />
         <MetricCard
           title="Velocity"
-          value={metrics.velocity}
+          value={isLoading ? '...' : metrics.velocity}
           unit="tasks/day"
           change={`Over ${range} days`}
           icon={Gauge}
@@ -251,56 +306,49 @@ export const Analytics: React.FC<{
         />
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Performance Trend */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-lg">Task Activity</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-lg">Activity Trends</h3>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.completed}</span>
                 <span className="text-sm text-slate-400 font-medium">completed</span>
                 <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full flex items-center gap-1">
-                  <TrendingUp size={12} /> {range}d
+                  <TrendingUp size={12} /> {trends.bucketType}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
               <span className="flex items-center gap-1.5 text-[#006644]"><span className="w-2 h-2 rounded-full bg-[#006644]" />Completed</span>
-              <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400" />Created</span>
+              <span className="flex items-center gap-1.5 text-rose-500"><span className="w-2 h-2 rounded-full bg-rose-500" />Overdue</span>
             </div>
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#006644" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#006644" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
-                <YAxis hide />
-                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                <Area type="monotone" dataKey="completed" stroke="#006644" strokeWidth={3} fillOpacity={1} fill="url(#colorCompleted)" />
-                <Area type="monotone" dataKey="created" stroke="#10B981" strokeWidth={2} strokeDasharray="6 3" fillOpacity={1} fill="url(#colorCreated)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-[320px] w-full">
+            {isLoading ? (
+              <NoDataPanel title="Loading analytics" detail="Building your reporting snapshot from MongoDB aggregation pipelines." />
+            ) : hasTrendData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trends.trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
+                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
+                  <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Line type="monotone" dataKey="completed" stroke="#006644" strokeWidth={3} dot={{ r: 4, fill: '#006644' }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="overdue" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e' }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <NoDataPanel title="No trend data yet" detail="Completed or overdue tasks in this date range will appear here automatically." />
+            )}
           </div>
         </div>
 
-        {/* Summary Card */}
         <div className="bg-linear-to-br from-[#006644] to-[#004e33] p-8 rounded-[32px] text-white flex flex-col justify-between shadow-xl shadow-emerald-200/50">
           <div>
             <h4 className="text-xl font-bold mb-3 leading-tight">Quick Summary</h4>
             <p className="text-emerald-100/70 text-sm leading-relaxed">
-              You have <span className="text-white font-bold">{metrics.total}</span> total tasks.
+              You own <span className="text-white font-bold">{metrics.total}</span> tasks in this range.
               <span className="text-white font-bold"> {metrics.completed}</span> completed,
               <span className="text-white font-bold"> {metrics.inProgress}</span> in progress, and
               <span className="text-white font-bold"> {metrics.pending}</span> pending.
@@ -313,7 +361,8 @@ export const Analytics: React.FC<{
             <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-200">{metrics.efficiency}% completion rate</p>
             <button
               onClick={handleExport}
-              className="w-full bg-white text-[#006644] py-4 rounded-2xl font-bold hover:bg-slate-50 transition-colors shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="w-full bg-white disabled:bg-white/60 text-[#006644] py-4 rounded-2xl font-bold hover:bg-slate-50 transition-colors shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <Download size={16} />
               Export Report
@@ -322,58 +371,75 @@ export const Analytics: React.FC<{
         </div>
       </div>
 
-      {/* Bottom Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Status Breakdown */}
         <div className="bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex flex-col mb-8">
             <h3 className="font-bold text-slate-900 dark:text-white text-lg">Status Breakdown</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
-              <span className="text-sm text-slate-400 font-medium">tasks</span>
+              <span className="text-sm text-slate-400 font-medium">owned tasks</span>
             </div>
           </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
-                <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none' }} />
-                <Bar dataKey="value" radius={[12, 12, 4, 4]} barSize={50}>
-                  {statusData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={statusColors[index]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[280px] w-full">
+            {isLoading ? (
+              <NoDataPanel title="Loading breakdown" detail="Preparing your status percentages." />
+            ) : hasOverviewData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={overview.statusBreakdown}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={62}
+                    outerRadius={96}
+                    paddingAngle={4}
+                  >
+                    {overview.statusBreakdown.map((entry) => (
+                      <Cell key={entry.name} fill={statusColors[entry.name]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, _name: string, item: any) => [
+                      `${value} tasks (${item.payload.percentage}%)`,
+                      item.payload.name,
+                    ]}
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <NoDataPanel title="No data to chart" detail="Create your first task to see status percentages here." />
+            )}
           </div>
         </div>
 
-        {/* Priority Distribution */}
         <div className="bg-white dark:bg-slate-800 p-8 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
           <div className="flex flex-col mb-8">
-            <h3 className="font-bold text-slate-900 dark:text-white text-lg">Priority Distribution</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white text-lg">Status Counts</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
-              <span className="text-sm text-slate-400 font-medium">tasks</span>
+              <PieChartIcon size={18} className="text-[#006644]" />
+              <span className="text-sm text-slate-400 font-medium">Database-backed aggregation</span>
             </div>
           </div>
-          <div className="flex-1 flex flex-col justify-center space-y-8">
-            {priorityData.map(track => (
-              <div key={track.label} className="space-y-2">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
-                  <span>{track.label}</span>
-                  <span className="text-slate-900 dark:text-white">{track.value}%</span>
-                </div>
-                <div className="w-full bg-slate-50 dark:bg-slate-700 h-3 rounded-full overflow-hidden border border-slate-100/50 dark:border-slate-600/50">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${track.value}%` }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
-                    className={cn("h-full rounded-full", track.color)}
-                  />
-                </div>
-              </div>
-            ))}
+          <div className="h-[280px] w-full">
+            {isLoading ? (
+              <NoDataPanel title="Loading counts" detail="Counting each status directly in MongoDB." />
+            ) : hasOverviewData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={overview.statusBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
+                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none' }} />
+                  <Bar dataKey="value" radius={[12, 12, 4, 4]} barSize={50}>
+                    {overview.statusBreakdown.map((entry) => (
+                      <Cell key={entry.name} fill={statusColors[entry.name]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <NoDataPanel title="Nothing counted yet" detail="Owned tasks will be grouped into Pending, In Progress, and Completed." />
+            )}
           </div>
         </div>
       </div>

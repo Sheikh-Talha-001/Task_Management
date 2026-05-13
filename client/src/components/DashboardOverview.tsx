@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
 import { ProgressBar } from './ProgressBar';
+import api from '../lib/api';
 
 
 const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hideArrow }: any) => (
@@ -56,6 +57,11 @@ const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hid
 export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = ({ tasks, onMenuClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [analyticsProgress, setAnalyticsProgress] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    completionPercentage: 0,
+  });
 
   // Time Tracker State
   const [timerActive, setTimerActive] = useState(false);
@@ -98,12 +104,40 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
     }
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProgressOverview = async () => {
+      try {
+        const { data } = await api.get('/analytics/overview');
+
+        if (!isMounted) return;
+
+        setAnalyticsProgress({
+          totalTasks: data.data.totalTasks,
+          completedTasks: data.data.statusCounts.Completed,
+          completionPercentage: data.data.completionPercentage,
+        });
+      } catch (error: any) {
+        if (error?.name === 'CanceledError') return;
+
+        console.error('Failed to fetch dashboard analytics overview:', error);
+      }
+    };
+
+    fetchProgressOverview();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tasks]);
+
   // Stats calculations
   const totalTasks = tasks.length;
   const completedTasksCount = tasks.filter(t => t.status === 'Completed').length;
   const inProgressTasksCount = tasks.filter(t => t.status === 'In Progress').length;
   const pendingTasksCount = tasks.filter(t => t.status === 'Pending').length;
-  const overallPercentage = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
+  const overallPercentage = analyticsProgress.completionPercentage;
 
   const productivityData = [
     { name: 'S', value: 45, type: 'striped' },
@@ -257,7 +291,12 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
         {/* Right Section (Gauge and Timer) - 1 col */}
         <div className="lg:col-span-1 space-y-8">
             {/* Overall Progress Gauge */}
-            <ProgressBar tasks={tasks} />
+            <ProgressBar
+              tasks={tasks}
+              percentageOverride={analyticsProgress.completionPercentage}
+              totalOverride={analyticsProgress.totalTasks}
+              completedOverride={analyticsProgress.completedTasks}
+            />
 
             {/* Time Tracker */}
             <div className="bg-[#0a2e1d] p-8 rounded-[32px] relative overflow-hidden group min-h-[350px] flex flex-col">

@@ -77,6 +77,12 @@ const taskSchema = new mongoose.Schema(
 // Original: Optimize "get my tasks filtered by status"
 taskSchema.index({ user: 1, status: 1 });
 
+// Analytics: Optimize owner-only due-date reporting for overdue trend buckets.
+taskSchema.index({ user: 1, dueDate: 1 });
+
+// Analytics: Optimize owner-only completed-task trend buckets by update time.
+taskSchema.index({ user: 1, status: 1, updatedAt: 1 });
+
 // NEW: Optimize "get all tasks shared with me"
 // When User B calls GET /api/tasks/shared, Mongo uses this index
 // instead of scanning every task document in the collection.

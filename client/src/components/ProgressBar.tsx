@@ -3,12 +3,21 @@ import { Task } from '../types';
 
 interface ProgressBarProps {
   tasks: Task[];
+  percentageOverride?: number;
+  totalOverride?: number;
+  completedOverride?: number;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ tasks }) => {
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-  const percentage = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+export const ProgressBar: React.FC<ProgressBarProps> = ({
+  tasks,
+  percentageOverride,
+  totalOverride,
+  completedOverride,
+}) => {
+  const totalTasks = totalOverride ?? tasks.length;
+  const completedTasks = completedOverride ?? tasks.filter(t => t.status === 'Completed').length;
+  const calculatedPercentage = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  const percentage = percentageOverride ?? calculatedPercentage;
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 p-8 shadow-sm flex flex-col items-center w-full" data-testid="progress-bar-container">
@@ -44,11 +53,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ tasks }) => {
       <div className="grid grid-cols-2 gap-2 w-full mt-auto">
          <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
-           <span className="text-[10px] text-slate-500 font-bold">Completed</span>
+           <span className="text-[10px] text-slate-500 font-bold">Completed {completedTasks}</span>
          </div>
          <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-[#0a2e1d] rounded-full"></div>
-           <span className="text-[10px] text-slate-500 font-bold">In Progress</span>
+           <span className="text-[10px] text-slate-500 font-bold">Total {totalTasks}</span>
          </div>
       </div>
     </div>

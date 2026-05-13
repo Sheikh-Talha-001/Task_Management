@@ -24,6 +24,8 @@
 //    • /api/notifications         → GET your notification history
 //    • /api/notifications/:id/read → PUT mark a notification as read
 //    • /api/notifications/read-all → PUT mark all as read
+//    • /api/analytics/overview    → GET owner-only task completion summary
+//    • /api/analytics/trends      → GET chart-ready completion/overdue trends
 //
 // WHY THIS COLLABORATION LAYER MAKES THE APP "UNIGNORABLE":
 // Without it, Donezu is a personal sticky note. With it, Donezu becomes a
@@ -52,6 +54,7 @@ const authRoutes          = require('./routes/auth');
 const taskRoutes          = require('./routes/taskRoutes');
 const notificationRoutes  = require('./routes/notificationRoutes'); // NEW
 const feedbackRoutes      = require('./routes/feedbackRoutes');
+const analyticsRoutes     = require('./routes/analyticsRoutes');
 const { errorHandler }    = require('./middleware/errorHandler');
 
 // ─── Create Express App ───────────────────────────────────────────────────────
@@ -126,7 +129,7 @@ if (process.env.NODE_ENV !== 'test') {
     })
   );
   console.log(
-    `📄 Swagger docs available at http://localhost:${process.env.PORT || 5000}/api-docs`
+    `📄 Swagger docs available at http://localhost:${process.env.PORT || 5001}/api-docs`
   );
 }
 
@@ -137,10 +140,26 @@ app.use((req, res, next) => {
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
+// WHY AGGREGATION FOR ANALYTICS:
+// A dashboard needs counts, percentages, and grouped trend data. MongoDB's
+// aggregation pipeline calculates those stats inside the database, close to the
+// indexed data, instead of pulling every task into Node.js and looping manually.
+// That keeps analytics fast as the app grows from a few tasks to thousands.
+//
+// HOW RECHARTS USES THIS DATA:
+// Recharts expects plain arrays like [{ label: 'May 13', completed: 3 }].
+// The analytics routes return chart-ready arrays, so React can focus on drawing
+// the Bento UI instead of reshaping database records on every render.
+//
+// WHY THIS MAKES DONEZU STAND OUT:
+// Recruiters notice engineers who turn raw app activity into product insight.
+// Data-driven reporting shows you understand not just CRUD, but how teams make
+// decisions from real usage signals.
 app.use('/api/auth', authRoutes);                 // Public: register & login
 app.use('/api/tasks', taskRoutes);                // Protected: CRUD + sharing
 app.use('/api/notifications', notificationRoutes); // NEW: notification history
 app.use('/api/feedback', feedbackRoutes);          // Protected: feedback submissions
+app.use('/api/analytics', analyticsRoutes);        // Protected: owner-only reporting
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -151,7 +170,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 if (process.env.NODE_ENV !== 'test') {
   // IMPORTANT: We listen on httpServer, NOT app.listen()
   // This ensures both Express routes AND Socket.IO share the same port.
