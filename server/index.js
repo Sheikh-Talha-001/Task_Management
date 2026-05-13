@@ -1,28 +1,88 @@
 // server/index.js
+// ═══════════════════════════════════════════════════════════════════════════════
+// DONEZU — Task Management Server (with Real-Time Collaboration)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// WHAT'S NEW IN THIS VERSION:
+//
+// 1. SOCKET.IO INTEGRATION
+//    Previously, the app was pure HTTP — clients had to refresh or poll to see
+//    updates. Now, when Alice shares a task with Bob, Bob's browser instantly
+//    receives a "notification" event via WebSocket. No refresh needed.
+//
+// 2. HTTP SERVER WRAPPING
+//    Express normally creates an HTTP server internally via app.listen().
+//    But Socket.IO needs access to the raw HTTP server to "upgrade" regular
+//    HTTP connections into persistent WebSocket connections. So we:
+//      a) Create the HTTP server manually: http.createServer(app)
+//      b) Pass it to Socket.IO:            initSocket(httpServer)
+//      c) Start listening on the HTTP server, not the Express app
+//
+// 3. NEW ROUTES
+//    • /api/tasks/shared          → GET tasks shared with you
+//    • /api/tasks/:id/share       → PUT share a task with someone
+//    • /api/notifications         → GET your notification history
+//    • /api/notifications/:id/read → PUT mark a notification as read
+//    • /api/notifications/read-all → PUT mark all as read
+//
+// WHY THIS COLLABORATION LAYER MAKES THE APP "UNIGNORABLE":
+// Without it, Donezu is a personal sticky note. With it, Donezu becomes a
+// team coordination tool where actions have immediate, visible consequences.
+// When you mark a task as "Completed," your teammate SEES it happen in
+// real-time. That instant feedback loop creates accountability and engagement
+// that static to-do apps simply can't match. Teams that see each other's
+// progress are teams that ship faster.
+// ═══════════════════════════════════════════════════════════════════════════════
+
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 const express    = require('express');
+const http       = require('http');  // NEW: Node's built-in HTTP module
 const helmet     = require('helmet');
 const rateLimit  = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const swaggerUi  = require('swagger-ui-express');
+const cors       = require('cors');
 
-const connectDB     = require('./config/db');
-const swaggerSpec   = require('./config/swaggerConfig');
-const authRoutes    = require('./routes/auth');
-const taskRoutes    = require('./routes/taskRoutes');
-const { errorHandler } = require('./middleware/errorHandler');
+const connectDB           = require('./config/db');
+const swaggerSpec         = require('./config/swaggerConfig');
+const { initSocket }      = require('./config/socket');     // NEW: Socket.IO
+const authRoutes          = require('./routes/auth');
+const taskRoutes          = require('./routes/taskRoutes');
+const notificationRoutes  = require('./routes/notificationRoutes'); // NEW
+const feedbackRoutes      = require('./routes/feedbackRoutes');
+const { errorHandler }    = require('./middleware/errorHandler');
 
-const cors = require('cors');
-
+// ─── Create Express App ───────────────────────────────────────────────────────
 const app = express();
 
-// Enable CORS with restricted origin in production
+// ─── Create HTTP Server ───────────────────────────────────────────────────────
+// WHY: Socket.IO needs a raw HTTP server to perform the "protocol upgrade"
+// from HTTP to WebSocket. This is the handshake process:
+//   1. Client sends a regular HTTP request to the server
+//   2. Both sides agree to "upgrade" the connection to WebSocket
+//   3. The connection stays open — now messages flow both ways instantly
+// If we just used app.listen(), Express would create the HTTP server internally
+// and we wouldn't have a reference to pass to Socket.IO.
+const httpServer = http.createServer(app);
+
+// ─── Initialize Socket.IO ─────────────────────────────────────────────────────
+// This attaches Socket.IO to our HTTP server. From this point forward:
+//   • Any controller can call getIO() to emit events
+//   • Any controller can call getSocketId(userId) to check if a user is online
+// The socket.js module handles connection/disconnection and maps userIds
+// to socketIds so we can send private notifications to specific users.
+if (process.env.NODE_ENV !== 'test') {
+  initSocket(httpServer);
+}
+
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
 app.use(cors({
   origin: allowedOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true,
 }));
 
 // ─── Connect to MongoDB ───────────────────────────────────────────────────────
@@ -53,7 +113,6 @@ app.use(express.json());
 app.use(mongoSanitize());
 
 // ─── API Documentation (development + production) ────────────────────────────
-// Swagger UI is always available; restrict in production via env var if needed
 if (process.env.NODE_ENV !== 'test') {
   app.use(
     '/api-docs',
@@ -61,8 +120,8 @@ if (process.env.NODE_ENV !== 'test') {
     swaggerUi.setup(swaggerSpec, {
       customSiteTitle: 'Task Management API Docs',
       swaggerOptions: {
-        docExpansion: 'list',  // expand operation list by default
-        filter: true,          // enable search bar
+        docExpansion: 'list',
+        filter: true,
       },
     })
   );
@@ -78,11 +137,10 @@ app.use((req, res, next) => {
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);   // Public: register & login
-app.use('/api/tasks', taskRoutes);  // Protected: requires JWT
-
-const feedbackRoutes = require('./routes/feedbackRoutes');
-app.use('/api/feedback', feedbackRoutes); // Protected: feedback submissions
+app.use('/api/auth', authRoutes);                 // Public: register & login
+app.use('/api/tasks', taskRoutes);                // Protected: CRUD + sharing
+app.use('/api/notifications', notificationRoutes); // NEW: notification history
+app.use('/api/feedback', feedbackRoutes);          // Protected: feedback submissions
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -95,9 +153,17 @@ app.use(errorHandler);
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT} 🛠️`);
+  // IMPORTANT: We listen on httpServer, NOT app.listen()
+  // This ensures both Express routes AND Socket.IO share the same port.
+  // Express handles HTTP requests, Socket.IO handles WebSocket connections,
+  // and they coexist peacefully on port 5000.
+  httpServer.listen(PORT, () => {
+    console.log(`\n🚀 Server is running on port ${PORT}`);
+    console.log(`⚡ Socket.IO is ready for real-time connections`);
+    console.log(`📄 API Docs: http://localhost:${PORT}/api-docs\n`);
   });
 }
 
+// Export both for testing — app for Supertest, httpServer for Socket.IO tests
 module.exports = app;
+module.exports.httpServer = httpServer;

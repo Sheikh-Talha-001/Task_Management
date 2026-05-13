@@ -1,15 +1,36 @@
 // server/models/Task.js
+// ─────────────────────────────────────────────────────────────────────────────
+// WHAT CHANGED (Collaboration Update):
+// 1. Added `sharedWith` — an array of User ObjectIds. When the owner shares
+//    a task, the collaborator's ID is pushed into this array. The collaborator
+//    can then view and update the task's status, but CANNOT delete or re-share.
+// 2. Added an index on `sharedWith` so the query "find all tasks shared with
+//    me" is fast, even when the database has thousands of tasks.
+// 3. The existing `user` field now acts as the OWNER. Only the owner can
+//    delete, share, or fully edit the task.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const mongoose = require('mongoose');
 
 // Define the Task schema
 const taskSchema = new mongoose.Schema(
   {
-    // The user who owns this task
+    // The user who OWNS this task (creator). Only the owner can delete or share.
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
+
+    // ─── NEW: Collaboration ────────────────────────────────────────────────
+    // Users this task has been shared with. They can VIEW and UPDATE STATUS,
+    // but they CANNOT delete or share it further.
+    sharedWith: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
 
     // Task title - required, trimmed of whitespace
     title: {
@@ -52,8 +73,14 @@ const taskSchema = new mongoose.Schema(
   }
 );
 
-// Add compound index to optimize querying tasks by user and filtering by status
+// ─── Indexes ──────────────────────────────────────────────────────────────────
+// Original: Optimize "get my tasks filtered by status"
 taskSchema.index({ user: 1, status: 1 });
+
+// NEW: Optimize "get all tasks shared with me"
+// When User B calls GET /api/tasks/shared, Mongo uses this index
+// instead of scanning every task document in the collection.
+taskSchema.index({ sharedWith: 1 });
 
 // Create and export the Task model
 const Task = mongoose.model('Task', taskSchema);

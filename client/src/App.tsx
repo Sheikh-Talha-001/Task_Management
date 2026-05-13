@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/DashboardOverview';
@@ -157,6 +157,7 @@ export default function App() {
       
       <main className="flex-1 lg:ml-72 p-4 md:p-10 max-w-[1440px] mx-auto w-full transition-all">
         <AnimatePresence mode="wait">
+          {/* @ts-expect-error: key is required by AnimatePresence but not in RoutesProps */}
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<PageWrapper><Dashboard tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
