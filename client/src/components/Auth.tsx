@@ -33,8 +33,9 @@ export const Auth: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
         localStorage.setItem('user', JSON.stringify({ _id: data._id, name: data.name, email: data.email }));
         onLogin();
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Authentication failed. Please try again.');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error && 'response' in err ? (err as any).response?.data?.message : 'Authentication failed. Please try again.';
+      toast.error(errorMsg || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

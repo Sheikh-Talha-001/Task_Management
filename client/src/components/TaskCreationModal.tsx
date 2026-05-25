@@ -10,7 +10,7 @@ type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
 interface TaskCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (task: Omit<Task, 'id'>) => void;
+  onCreate: (task: Omit<Task, '_id'>) => void;
 }
 
 const priorityConfig: Record<Priority, { dot: string; text: string; bg: string; border: string; activeBg: string; activeBorder: string; activeText: string }> = {
@@ -46,7 +46,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ isOpen, on
 
     onCreate({
       title,
-      status,
+      status: status as Task['status'],
       priority,
       description,
       dueDate: dueDate ? formatDateDisplay(dueDate) : 'No Date',
@@ -173,7 +173,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({ isOpen, on
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Detail the requirements and acceptance criteria..."
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 min-h-[120px] resize-none"
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006644]/5 focus:border-[#006644] transition-all placeholder:text-slate-300 min-h-[120px] resize-none custom-scrollbar"
                 />
               </div>
 

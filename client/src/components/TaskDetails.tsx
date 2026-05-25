@@ -79,8 +79,8 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
     >
       <div className="p-10 space-y-10">
         <header className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap gap-4 justify-between items-start md:items-center">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <button 
                   onClick={() => setIsStatusOpen(!isStatusOpen)}
@@ -101,7 +101,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
                         <button
                           key={s}
                           onClick={() => {
-                            setEditedTask({ ...editedTask, status: s });
+                            setEditedTask({ ...editedTask, status: s as Task['status'] });
                             setIsStatusOpen(false);
                           }}
                           className={cn(
@@ -142,7 +142,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
                         <button
                           key={p}
                           onClick={() => {
-                            setEditedTask({ ...editedTask, priority: p as any });
+                            setEditedTask({ ...editedTask, priority: p as Task['priority'] });
                             setIsPriorityOpen(false);
                           }}
                           className={cn(
@@ -197,7 +197,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
                 <textarea 
                   value={editedTask.description}
                   onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                  className="w-full text-slate-600 text-sm font-medium leading-relaxed p-4 bg-transparent border-none focus:ring-0 min-h-[140px] resize-none"
+                  className="w-full text-slate-600 text-sm font-medium leading-relaxed p-4 bg-transparent border-none focus:ring-0 min-h-[140px] resize-none custom-scrollbar"
                   placeholder="Describe this task..."
                 />
               </div>

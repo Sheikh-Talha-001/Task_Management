@@ -23,6 +23,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { SettingsProvider } from './context/SettingsContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationPanel } from './components/NotificationPanel';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -163,26 +164,27 @@ export default function App() {
           <NotificationPanel />
         </div>
         <AnimatePresence mode="wait">
-          {/* @ts-expect-error: key is required by AnimatePresence but not in RoutesProps */}
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<PageWrapper><Dashboard tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/dashboard" element={<PageWrapper><ErrorBoundary name="Dashboard"><Dashboard tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></ErrorBoundary></PageWrapper>} />
             <Route path="/tasks" element={
               <PageWrapper>
-                <Tasks 
-                  tasks={tasks} 
-                  onNewTask={() => setIsNewTaskModalOpen(true)} 
-                  onTaskClick={setSelectedTask} 
-                  onMenuClick={() => setIsSidebarOpen(true)}
-                  onSearch={setGlobalSearchQuery}
-                  onDeleteTask={handleDeleteTask}
-                />
+                <ErrorBoundary name="Tasks">
+                  <Tasks 
+                    tasks={tasks} 
+                    onNewTask={() => setIsNewTaskModalOpen(true)} 
+                    onTaskClick={setSelectedTask} 
+                    onMenuClick={() => setIsSidebarOpen(true)}
+                    onSearch={setGlobalSearchQuery}
+                    onDeleteTask={handleDeleteTask}
+                  />
+                </ErrorBoundary>
               </PageWrapper>
             } />
-            <Route path="/analytics" element={<PageWrapper><Analytics tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
-            <Route path="/team" element={<PageWrapper><Team tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
-            <Route path="/settings" element={<PageWrapper><Settings onLogout={handleLogout} onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
-            <Route path="/help" element={<PageWrapper><Help onMenuClick={() => setIsSidebarOpen(true)} /></PageWrapper>} />
+            <Route path="/analytics" element={<PageWrapper><ErrorBoundary name="Analytics"><Analytics tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></ErrorBoundary></PageWrapper>} />
+            <Route path="/team" element={<PageWrapper><ErrorBoundary name="Team"><Team tasks={tasks} onMenuClick={() => setIsSidebarOpen(true)} /></ErrorBoundary></PageWrapper>} />
+            <Route path="/settings" element={<PageWrapper><ErrorBoundary name="Settings"><Settings onLogout={handleLogout} onMenuClick={() => setIsSidebarOpen(true)} /></ErrorBoundary></PageWrapper>} />
+            <Route path="/help" element={<PageWrapper><ErrorBoundary name="Help"><Help onMenuClick={() => setIsSidebarOpen(true)} /></ErrorBoundary></PageWrapper>} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </AnimatePresence>

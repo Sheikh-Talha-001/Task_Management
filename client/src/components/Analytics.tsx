@@ -90,7 +90,17 @@ const statusColors: Record<StatusName, string> = {
   Completed: '#006644',
 };
 
-const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: any) => (
+interface MetricCardProps {
+  title: string;
+  value: number | string;
+  unit?: string;
+  change: string;
+  icon: React.ElementType;
+  color: 'green' | 'emerald' | 'rose';
+  trend: 'up' | 'down' | 'neutral';
+}
+
+const MetricCard = ({ title, value, unit, change, icon: Icon, color, trend }: MetricCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -159,11 +169,11 @@ export const Analytics: React.FC<{
         userId = JSON.parse(userStr)._id || JSON.parse(userStr).id;
       } catch (e) { }
     }
-    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin.replace(':3000', ':5000');
+    const backendUrl = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : 'http://localhost:5001';
     
     const socket = io(backendUrl, { query: { userId } });
 
-    socket.on('notification', (notif: any) => {
+    socket.on('notification', (notif: { type: string; [key: string]: unknown }) => {
       if (notif.type === 'STATUS_UPDATED' || notif.type === 'TASK_SHARED') {
         setRefetchTrigger(prev => prev + 1);
       }
@@ -191,13 +201,14 @@ export const Analytics: React.FC<{
 
         setOverview(overviewResponse.data.data);
         setTrends(trendsResponse.data.data);
-      } catch (error: any) {
-        if (!isMounted || error?.name === 'CanceledError') return;
+      } catch (error: unknown) {
+        if (!isMounted || (error instanceof Error && error.name === 'CanceledError')) return;
 
         console.error('Failed to fetch analytics:', error);
         setOverview(emptyOverview(range));
         setTrends({ range, bucketType: range === 7 ? 'daily' : 'weekly', trends: [] });
-        setErrorMessage(error?.response?.data?.message || 'Unable to load analytics right now.');
+        const errMsg = error instanceof Error && 'response' in error ? (error as any).response?.data?.message : 'Unable to load analytics right now.';
+        setErrorMessage(errMsg || 'Unable to load analytics right now.');
       } finally {
         if (isMounted) {
           setIsLoading(false);

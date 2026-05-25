@@ -29,9 +29,10 @@ export const TaskShareModal: React.FC<TaskShareModalProps> = ({ isOpen, onClose,
       setEmail('');
       onShared?.();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to share task:', error);
-      toast.error(error?.response?.data?.message || 'Failed to share task');
+      const msg = error instanceof Error && 'response' in error ? (error as any).response?.data?.message : 'Failed to share task';
+      toast.error(msg || 'Failed to share task');
     } finally {
       setIsLoading(false);
     }

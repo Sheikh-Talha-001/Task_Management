@@ -61,6 +61,9 @@ const { errorLogger }     = require('./middleware/errorLogger');
 // ─── Create Express App ───────────────────────────────────────────────────────
 const app = express();
 
+// Trust proxy (required if the server is run behind a proxy like Nginx, Render, Heroku, or local dev proxies)
+app.set('trust proxy', 1);
+
 // ─── Create HTTP Server ───────────────────────────────────────────────────────
 // WHY: Socket.IO needs a raw HTTP server to perform the "protocol upgrade"
 // from HTTP to WebSocket. This is the handshake process:
@@ -98,9 +101,10 @@ connectDB();
 app.use(helmet());
 
 // 2. Rate Limiter — 100 requests per 15 minutes per IP (active in all envs)
+// Relaxed in development mode (10,000 requests) to prevent false-positives
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,                  // limit each IP to 100 requests per window
+  max: process.env.NODE_ENV === 'development' ? 10000 : 100, // limit each IP to 100 requests per window (or 10,000 in dev)
   standardHeaders: true,     // return rate limit info in RateLimit-* headers
   legacyHeaders: false,      // disable X-RateLimit-* legacy headers
   message: {
@@ -110,9 +114,10 @@ const globalLimiter = rateLimit({
 app.use('/api', globalLimiter);
 
 // 2b. Strict Auth Limiter - 5 attempts per 15 minutes
+// Relaxed in development mode (1,000 requests) to prevent false-positives
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: process.env.NODE_ENV === 'development' ? 1000 : 5, // 5 attempts in prod, 1000 in dev
   standardHeaders: true,
   legacyHeaders: false,
   message: {

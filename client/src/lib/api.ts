@@ -9,7 +9,8 @@ const api = axios.create({
 const pendingRequests = new Map();
 
 // Generate a unique key for each request
-const getRequestKey = (config: any) => `${config.method}:${config.url}`;
+import { InternalAxiosRequestConfig } from 'axios';
+const getRequestKey = (config: InternalAxiosRequestConfig) => `${config.method}:${config.url}`;
 
 // Add a request interceptor to attach the JWT token to every request
 api.interceptors.request.use(

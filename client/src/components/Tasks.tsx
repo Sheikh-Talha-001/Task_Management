@@ -237,7 +237,7 @@ const MiniTimeTracker: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
   ];
 
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
     if (timerActive && timeLeft > 0) {
       interval = setInterval(() => setTimeLeft(p => p - 1), 1000);
     } else if (timeLeft === 0) {

@@ -12,8 +12,8 @@ interface Notification {
   message: string;
   isRead: boolean;
   createdAt: string;
-  task?: any;
-  sender?: any;
+  task?: unknown;
+  sender?: unknown;
 }
 
 export const NotificationPanel: React.FC = () => {
@@ -50,8 +50,8 @@ export const NotificationPanel: React.FC = () => {
       } catch (e) { }
     }
 
-    // Connect to backend (assuming same host/port if proxy is used, or fallback)
-    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin.replace(':3000', ':5000');
+    // Connect to backend (using the same base URL as our API instance)
+    const backendUrl = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : 'http://localhost:5001';
     
     socketRef.current = io(backendUrl, {
       query: { userId }

@@ -31,9 +31,10 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ task, onUp
       });
       onUpdate(data);
       toast.success('File uploaded successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload file:', error);
-      toast.error(error?.response?.data?.message || 'Failed to upload file');
+      const msg = error instanceof Error && 'response' in error ? (error as any).response?.data?.message : 'Failed to upload file';
+      toast.error(msg || 'Failed to upload file');
     } finally {
       setIsUploading(false);
     }
@@ -52,9 +53,10 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ task, onUp
       const { data } = await api.delete(`/tasks/${task._id}/attachments/${attachmentId}`);
       onUpdate(data);
       toast.success('File removed');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete file:', error);
-      toast.error(error?.response?.data?.message || 'Failed to remove file');
+      const msg = error instanceof Error && 'response' in error ? (error as any).response?.data?.message : 'Failed to remove file';
+      toast.error(msg || 'Failed to remove file');
     }
   };
 

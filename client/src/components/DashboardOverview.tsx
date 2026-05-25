@@ -8,9 +8,18 @@ import { cn } from '../lib/utils';
 import { Task } from '../types';
 import { ProgressBar } from './ProgressBar';
 import api from '../lib/api';
+interface StatCardProps {
+  title: string;
+  value: number | string;
+  change: string;
+  color: 'green' | 'white';
+  trend: 'up' | 'down' | 'neutral';
+  icon?: React.ElementType;
+  onClick?: () => void;
+  hideArrow?: boolean;
+}
 
-
-const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hideArrow }: any) => (
+const StatCard = ({ title, value, change, color, trend, icon: Icon, onClick, hideArrow }: StatCardProps) => (
   <motion.div 
     onClick={onClick}
     className={cn(
@@ -78,7 +87,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
   ];
 
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
     if (timerActive && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft(prev => prev - 1);
@@ -118,8 +127,8 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
           completedTasks: data.data.statusCounts.Completed,
           completionPercentage: data.data.completionPercentage,
         });
-      } catch (error: any) {
-        if (error?.name === 'CanceledError') return;
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'CanceledError') return;
 
         console.error('Failed to fetch dashboard analytics overview:', error);
       }
@@ -152,23 +161,23 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
   return (
     <div className="pb-12 space-y-10" ref={containerRef}>
       {/* Dashboard Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 dashboard-item pt-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 dashboard-item pt-4 flex-wrap">
+        <div className="flex items-center gap-4 min-w-0 w-full md:w-auto">
           <button 
              onClick={onMenuClick}
-             className="lg:hidden p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
+             className="lg:hidden p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all active:scale-95"
            >
              <Menu size={24} />
           </button>
-          <div>
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-            <p className="text-slate-400 mt-2 font-medium">Plan, prioritize, and accomplish your tasks with ease.</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">Dashboard</h1>
+            <p className="text-slate-400 mt-2 font-medium truncate">Plan, prioritize, and accomplish your tasks with ease.</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate('/tasks')}
-            className="px-6 py-3.5 bg-[#0a2e1d] hover:bg-[#1b5e40] text-white rounded-2xl flex items-center gap-2.5 font-bold transition-all shadow-xl shadow-emerald-900/10 active:scale-95"
+            className="px-6 py-3.5 min-h-[44px] bg-[#0a2e1d] hover:bg-[#1b5e40] text-white rounded-2xl flex items-center gap-2.5 font-bold transition-all shadow-xl shadow-emerald-900/10 active:scale-95"
           >
             <Plus size={20} strokeWidth={2.5} />
             Add Task
@@ -318,7 +327,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
                   <div className="relative">
                     <button 
                       onClick={() => setIsTaskDropdownOpen(!isTaskDropdownOpen)}
-                      className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10"
+                      className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10"
                     >
                       <Plus size={16} className="text-white" />
                     </button>
@@ -357,7 +366,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
                   <div className="relative mb-2">
                     <button 
                       onClick={() => setIsTimeMenuOpen(!isTimeMenuOpen)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-emerald-100 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/20 transition-colors border border-white/10"
+                      className="inline-flex min-h-[44px] items-center gap-1.5 px-3 py-1 bg-white/10 text-emerald-100 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/20 transition-colors border border-white/10"
                     >
                       <Clock size={12} />
                       Set Time
@@ -396,7 +405,7 @@ export const Dashboard: React.FC<{ tasks: Task[], onMenuClick: () => void }> = (
                       setTimerActive(false);
                       setTimeLeft(1500);
                     }}
-                    className="flex-1 h-14 rounded-2xl bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center border border-white/10 active:scale-95"
+                    className="flex-1 h-14 min-h-[44px] min-w-[44px] rounded-2xl bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center border border-white/10 active:scale-95"
                    >
                      <RotateCcw size={20} className="text-white" />
                    </button>

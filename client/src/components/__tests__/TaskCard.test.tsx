@@ -16,19 +16,19 @@ describe('TaskCard Component', () => {
   };
 
   it('should render the task title', () => {
-    render(<TaskCard task={mockTask} onClick={vi.fn()} />);
+    render(<TaskCard task={mockTask} onClick={vi.fn()} onDelete={vi.fn()} />);
     expect(screen.getByText('Complete the backend API')).toBeInTheDocument();
   });
 
   it('should display the correct status badge', () => {
-    render(<TaskCard task={mockTask} onClick={vi.fn()} />);
+    render(<TaskCard task={mockTask} onClick={vi.fn()} onDelete={vi.fn()} />);
     
     // Check if status text is visible
     expect(screen.getByText('In Progress')).toBeInTheDocument();
   });
 
   it('should display the priority badge', () => {
-    render(<TaskCard task={mockTask} onClick={vi.fn()} />);
+    render(<TaskCard task={mockTask} onClick={vi.fn()} onDelete={vi.fn()} />);
     expect(screen.getByText('High')).toBeInTheDocument();
   });
 });

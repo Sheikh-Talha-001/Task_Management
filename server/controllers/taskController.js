@@ -308,18 +308,11 @@ const updateTask = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized to update this task' });
     }
 
-    // Collaborators can ONLY update the status field — nothing else
+    // Collaborators can ONLY update the status field — nothing else.
+    // Since the client sends the entire task object in the PUT payload,
+    // we safely filter out all fields except 'status' to allow the request to succeed.
     if (userIsCollaborator && !userIsOwner) {
-      const allowedFields = ['status'];
-      const attemptedFields = Object.keys(req.body);
-      const forbidden = attemptedFields.filter((f) => !allowedFields.includes(f));
-
-      if (forbidden.length > 0) {
-        return res.status(403).json({
-          message: `Collaborators can only update: ${allowedFields.join(', ')}. ` +
-                   `You attempted to change: ${forbidden.join(', ')}`,
-        });
-      }
+      req.body = { status: req.body.status };
     }
 
     // Track if status changed (for real-time notification)
