@@ -22,9 +22,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (user?.preferences?.darkMode !== undefined) {
             setIsDarkMode(user.preferences.darkMode);
           } else {
-            // Fallback to system preference
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setIsDarkMode(prefersDark);
+            // Fallback to light mode by default
+            setIsDarkMode(false);
           }
         }
       } catch (e) {
