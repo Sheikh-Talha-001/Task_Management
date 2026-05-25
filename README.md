@@ -47,6 +47,42 @@ It features a stunning, highly responsive user interface with dynamic animations
 - bcryptjs
 - swagger-jsdoc & swagger-ui-express
 
+Live Deployments
+* **Frontend Web App (Vercel):** [https://donezo1.vercel.app/](https://donezo1.vercel.app/)
+* **Backend Production API (Railway):** [https://t-backend-production.up.railway.app/](https://t-backend-production.up.railway.app/)
+* **Interactive Documentation (Swagger):** `https://t-backend-production.up.railway.app/api-docs`
+
+---
+
+## 🚀 Key System Features
+
+### 1. Unified Bento Grid Dashboard & Industrial Zen Theme
+* High-fidelity structural modular grid organization to prevent layout shifting across any device size.
+* Complete cross-browser mobile responsive layouts tailored for modern touch targets.
+* Persistent Theme Context syncing Dark/Light mode selections globally back to MongoDB user profile preferences.
+  <img width="1920" height="1424" alt="screencapture-donezo1-vercel-app-dashboard-2026-05-25-23_33_17" src="https://github.com/user-attachments/assets/ab42991b-3c65-4be6-963c-88ad64286cc6" />
+
+
+### 2. Multi-User Collaboration & Real-Time Socket Layer
+* Dedicated resource sharing model supporting task delegation matrices via a `sharedWith` array schema design.
+* Instant low-latency notifications pushed directly across active user WebSocket channels using Socket.IO whenever status adjustments or sharing actions fire.
+
+  <img width="532" height="358" alt="Screenshot 2026-05-25 233430" src="https://github.com/user-attachments/assets/4e9f95ed-b03f-478c-a8a3-34490f891dcd" />
+
+### 3. Advanced Analytics & Insight Engines
+* High-speed server-side computation executing intensive queries entirely inside the MongoDB Aggregation Framework.
+* Real-time charting visualizations driven by Recharts utilizing responsive SVG matrices to display status segment breakdowns and multi-week performance trends.
+
+<img width="1920" height="1698" alt="screencapture-donezo1-vercel-app-analytics-2026-05-25-23_37_00" src="https://github.com/user-attachments/assets/c62cb19f-6b8d-447e-a42e-c1259f459b7f" />
+
+### 4. Cloud-Based Attachment Manager
+* Form-data streaming utilizing Multer parsing middleware to securely upload image assets, text files, and PDF documents.
+* Integrated remote validation guards connecting to Cloudinary asset storage vectors with optimized automated resource tracking pipelines.
+
+<img width="759" height="484" alt="Screenshot 2026-05-25 233920" src="https://github.com/user-attachments/assets/30299b33-8479-4821-9f50-296482a4c024" />
+
+---
+
 ## 📦 Installation & Setup
 
 ### Prerequisites
