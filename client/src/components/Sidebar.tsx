@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Users, BarChart3, Settings, HelpCircle, Plus, LogOut, Leaf } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Users, BarChart3, Settings, HelpCircle, Plus, LogOut, Leaf, Moon, Sun } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useTheme } from '../context/ThemeContext';
 
 interface SidebarProps {
   onNewTask: () => void;
@@ -14,6 +15,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onNewTask, onLogout, isOpen, onClose, taskCount }) => {
   const location = useLocation();
   const currentPath = location.pathname.substring(1) || 'dashboard';
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -106,6 +108,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNewTask, onLogout, isOpen, o
                   </NavLink>
                 );
               })}
+              
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <div className="flex items-center gap-3">
+                  {isDarkMode ? (
+                    <Moon size={20} className="transition-colors group-hover:text-slate-900 dark:group-hover:text-white" />
+                  ) : (
+                    <Sun size={20} className="transition-colors group-hover:text-slate-900 dark:group-hover:text-white" />
+                  )}
+                  {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                </div>
+                <div className="w-8 h-4 bg-emerald-500 rounded-full relative flex items-center shadow-inner overflow-hidden">
+                  <div className={cn("w-3 h-3 bg-white rounded-full absolute transition-transform", isDarkMode ? "translate-x-4" : "translate-x-1")} />
+                </div>
+              </button>
+
               <button
                 onClick={onLogout}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all group text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"

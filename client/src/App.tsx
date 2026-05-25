@@ -21,6 +21,8 @@ import api from './lib/api';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import { SettingsProvider } from './context/SettingsContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationPanel } from './components/NotificationPanel';
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -142,6 +144,7 @@ export default function App() {
   }
 
   return (
+    <ThemeProvider>
     <SettingsProvider>
     <div className="flex bg-[#f8fafc] dark:bg-slate-900 min-h-screen font-sans selection:bg-emerald-600/10 selection:text-emerald-600 overflow-x-hidden transition-colors duration-300">
       <Sidebar 
@@ -155,7 +158,10 @@ export default function App() {
         taskCount={tasks.length}
       />
       
-      <main className="flex-1 lg:ml-72 p-4 md:p-10 max-w-[1440px] mx-auto w-full transition-all">
+      <main className="flex-1 lg:ml-72 p-4 md:p-10 max-w-[1440px] mx-auto w-full transition-all relative">
+        <div className="absolute top-4 right-4 md:top-10 md:right-10 z-50">
+          <NotificationPanel />
+        </div>
         <AnimatePresence mode="wait">
           {/* @ts-expect-error: key is required by AnimatePresence but not in RoutesProps */}
           <Routes location={location} key={location.pathname}>
@@ -219,6 +225,7 @@ export default function App() {
       />
     </div>
     </SettingsProvider>
+    </ThemeProvider>
   );
 }
 

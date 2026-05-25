@@ -51,11 +51,12 @@ const connectDB           = require('./config/db');
 const swaggerSpec         = require('./config/swaggerConfig');
 const { initSocket }      = require('./config/socket');     // NEW: Socket.IO
 const authRoutes          = require('./routes/auth');
+const userRoutes          = require('./routes/userRoutes');
 const taskRoutes          = require('./routes/taskRoutes');
 const notificationRoutes  = require('./routes/notificationRoutes'); // NEW
 const feedbackRoutes      = require('./routes/feedbackRoutes');
 const analyticsRoutes     = require('./routes/analyticsRoutes');
-const { errorHandler }    = require('./middleware/errorHandler');
+const { errorLogger }     = require('./middleware/errorLogger');
 
 // ─── Create Express App ───────────────────────────────────────────────────────
 const app = express();
@@ -81,10 +82,10 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
+const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
 app.use(cors({
   origin: allowedOrigin,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Ensure PATCH is allowed for preferences
   credentials: true,
 }));
 
@@ -97,7 +98,7 @@ connectDB();
 app.use(helmet());
 
 // 2. Rate Limiter — 100 requests per 15 minutes per IP (active in all envs)
-const limiter = rateLimit({
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,                  // limit each IP to 100 requests per window
   standardHeaders: true,     // return rate limit info in RateLimit-* headers
@@ -106,7 +107,19 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again after 15 minutes.',
   },
 });
-app.use('/api', limiter);
+app.use('/api', globalLimiter);
+
+// 2b. Strict Auth Limiter - 5 attempts per 15 minutes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: 'Too many authentication attempts from this IP, please try again after 15 minutes.',
+  },
+});
+app.use('/api/auth', authLimiter);
 
 // ─── Body Parsing ─────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -156,6 +169,7 @@ app.use((req, res, next) => {
 // Data-driven reporting shows you understand not just CRUD, but how teams make
 // decisions from real usage signals.
 app.use('/api/auth', authRoutes);                 // Public: register & login
+app.use('/api/users', userRoutes);                // Protected: user preferences
 app.use('/api/tasks', taskRoutes);                // Protected: CRUD + sharing
 app.use('/api/notifications', notificationRoutes); // NEW: notification history
 app.use('/api/feedback', feedbackRoutes);          // Protected: feedback submissions
@@ -167,7 +181,7 @@ app.use((req, res) => {
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
-app.use(errorHandler);
+app.use(errorLogger);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5001;

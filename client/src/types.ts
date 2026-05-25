@@ -20,6 +20,23 @@ export interface Task {
     avatar?: string;
     initials: string;
   };
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  sharedWith?: {
+    _id: string;
+    name: string;
+    email: string;
+  }[];
+  attachments?: {
+    _id: string;
+    url: string;
+    publicId: string;
+    filename: string;
+    uploadedAt: string;
+  }[];
 }
 
 export interface Project {

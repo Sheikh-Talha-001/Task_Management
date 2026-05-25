@@ -40,6 +40,13 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+
+    // User preferences for UI state
+    preferences: {
+      darkMode: { type: Boolean, default: false },
+      sidebarOpen: { type: Boolean, default: true },
+      language: { type: String, default: 'en' },
+    },
   },
   {
     // Automatically add createdAt and updatedAt fields

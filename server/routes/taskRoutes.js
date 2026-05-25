@@ -21,7 +21,11 @@ const {
   updateTask,
   deleteTask,
   shareTask,
+  uploadAttachment,
+  deleteAttachment,
 } = require('../controllers/taskController');
+
+const { upload } = require('../config/cloudinary');
 
 // ─── Apply auth middleware to ALL task routes ─────────────────────────────────
 router.use(protect);
@@ -66,5 +70,23 @@ router.put('/:id/share', (req, res, next) => {
   console.log(`Route hit: PUT /api/tasks/${req.params.id}/share`);
   next();
 }, shareTask);        // PUT /api/tasks/:id/share → share with another user
+
+// ─── NEW: Task Attachments ───────────────────────────────────────────────────
+router.post('/:id/attachments', (req, res, next) => {
+  console.log(`Route hit: POST /api/tasks/${req.params.id}/attachments`);
+  // Check Multer upload errors gracefully
+  upload.single('file')(req, res, function (err) {
+    if (err) {
+      console.error(`Multer upload error: ${err.message}`);
+      return res.status(400).json({ message: `Upload error: ${err.message}` });
+    }
+    next();
+  });
+}, uploadAttachment);
+
+router.delete('/:id/attachments/:attachmentId', (req, res, next) => {
+  console.log(`Route hit: DELETE /api/tasks/${req.params.id}/attachments/${req.params.attachmentId}`);
+  next();
+}, deleteAttachment);
 
 module.exports = router;

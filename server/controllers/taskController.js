@@ -14,6 +14,7 @@ const Task = require('../models/Task');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { getIO, getSocketId } = require('../config/socket');
+const { cloudinary } = require('../config/cloudinary');
 
 // Helper: validate MongoDB ObjectId early to return clean 400 errors
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -555,6 +556,115 @@ const shareTask = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UPLOAD ATTACHMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+// @desc    Upload an attachment to a task
+// @route   POST /api/tasks/:id/attachments
+// @access  Private
+const uploadAttachment = async (req, res) => {
+  // Validate ObjectId
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: `Invalid task ID: '${req.params.id}'` });
+  }
+
+  // Check if file was uploaded
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file provided' });
+  }
+
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ message: `Task with ID '${req.params.id}' not found` });
+    }
+
+    // Verify task access: Only owner or collaborator can upload
+    if (!hasAccess(task, req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to upload attachments for this task' });
+    }
+
+    // Prepare attachment object from Cloudinary/Multer data
+    const attachment = {
+      url: req.file.path, // Secure URL from Cloudinary
+      publicId: req.file.filename, // Unique Cloudinary ID
+      filename: req.file.originalname, // Original filename from user
+    };
+
+    task.attachments.push(attachment);
+    await task.save();
+
+    // Populate user and sharedWith before returning to keep client's state complete
+    const updatedTask = await Task.findById(task._id)
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email');
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error(`[uploadAttachment] Error: ${error.message}`);
+    res.status(500).json({ message: 'Server error while uploading attachment' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE ATTACHMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+// @desc    Delete an attachment from a task
+// @route   DELETE /api/tasks/:id/attachments/:attachmentId
+// @access  Private
+const deleteAttachment = async (req, res) => {
+  const { id, attachmentId } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: `Invalid task ID: '${id}'` });
+  }
+
+  if (!isValidObjectId(attachmentId)) {
+    return res.status(400).json({ message: `Invalid attachment ID: '${attachmentId}'` });
+  }
+
+  try {
+    const task = await Task.findById(id);
+
+    if (!task) {
+      return res.status(404).json({ message: `Task with ID '${id}' not found` });
+    }
+
+    // Verify task access: Only owner or collaborator can delete
+    // (A more restrictive rule might be owner only, or uploader only, but we'll use task access)
+    if (!hasAccess(task, req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to delete attachments for this task' });
+    }
+
+    // Find the attachment in the array
+    const attachment = task.attachments.id(attachmentId);
+    
+    if (!attachment) {
+      return res.status(404).json({ message: `Attachment not found` });
+    }
+
+    // Delete the file from Cloudinary using publicId
+    await cloudinary.uploader.destroy(attachment.publicId);
+
+    // Pull the attachment from the mongoose array
+    task.attachments.pull(attachmentId);
+    await task.save();
+
+    // Populate user and sharedWith before returning to keep client's state complete
+    const updatedTask = await Task.findById(task._id)
+      .populate('user', 'name email')
+      .populate('sharedWith', 'name email');
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error(`[deleteAttachment] Error: ${error.message}`);
+    res.status(500).json({ message: 'Server error while deleting attachment' });
+  }
+};
+
 module.exports = {
   createTask,
   getTasks,
@@ -563,4 +673,6 @@ module.exports = {
   updateTask,
   deleteTask,
   shareTask,
+  uploadAttachment,
+  deleteAttachment,
 };

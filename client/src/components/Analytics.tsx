@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { io } from 'socket.io-client';
 import {
   BarChart,
   Bar,
@@ -148,6 +149,30 @@ export const Analytics: React.FC<{
   });
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    let userId = '';
+    if (userStr) {
+      try {
+        userId = JSON.parse(userStr)._id || JSON.parse(userStr).id;
+      } catch (e) { }
+    }
+    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin.replace(':3000', ':5000');
+    
+    const socket = io(backendUrl, { query: { userId } });
+
+    socket.on('notification', (notif: any) => {
+      if (notif.type === 'STATUS_UPDATED' || notif.type === 'TASK_SHARED') {
+        setRefetchTrigger(prev => prev + 1);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -185,7 +210,7 @@ export const Analytics: React.FC<{
     return () => {
       isMounted = false;
     };
-  }, [range]);
+  }, [range, refetchTrigger]);
 
   const metrics = useMemo(() => {
     const completed = overview.statusCounts.Completed;

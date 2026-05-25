@@ -9,10 +9,14 @@ import {
   Trash2, 
   Edit3, 
   FileText, 
-  ListTodo 
+  ListTodo,
+  Share2,
+  Paperclip
 } from 'lucide-react';
 import { Task, SubTask, Status } from '../types';
 import { cn } from '../lib/utils';
+import { TaskShareModal } from './TaskShareModal';
+import { AttachmentManager } from './AttachmentManager';
 
 interface TaskDetailsProps {
   task: Task;
@@ -25,6 +29,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
   const [newSubtask, setNewSubtask] = useState('');
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const statuses: Status[] = ['To Do', 'In Progress', 'Pending', 'Completed', 'Backlog', 'Active', 'Blocked'];
   const priorities = ['Low', 'Medium', 'High', 'Urgent'] as const;
@@ -153,12 +158,21 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
                 </AnimatePresence>
               </div>
             </div>
-            <button 
-                onClick={onClose}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
-            >
-              <X size={24} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsShareModalOpen(true)}
+                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest"
+              >
+                <Share2 size={16} />
+                <span className="hidden sm:inline">Share</span>
+              </button>
+              <button 
+                  onClick={onClose}
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              >
+                <X size={24} />
+              </button>
+            </div>
           </div>
 
           <div className="px-6 py-4 border-2 border-[#006644] rounded-3xl bg-emerald-50/5 shadow-inner">
@@ -274,6 +288,21 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
                     </div>
                 </div>
             </div>
+            
+            {/* Attachments Section */}
+            <div className="space-y-4 pt-8 border-t border-slate-50">
+                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                  <Paperclip size={16} />
+                  Attachments
+                </h2>
+                <AttachmentManager 
+                  task={editedTask} 
+                  onUpdate={(updated) => {
+                    setEditedTask(updated);
+                    onUpdate(updated);
+                  }} 
+                />
+            </div>
         </div>
 
         {/* Footer Actions */}
@@ -294,6 +323,12 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task, onClose, onUpdat
            </div>
         </footer>
       </div>
+      
+      <TaskShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        taskId={editedTask._id} 
+      />
     </motion.div>
   );
 };

@@ -66,6 +66,29 @@ const taskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
     },
+
+    // ─── NEW: Attachments ───────────────────────────────────────────────────
+    // Files uploaded via Cloudinary
+    attachments: [
+      {
+        url: {
+          type: String,
+          required: [true, 'Attachment must have a URL'],
+        },
+        publicId: {
+          type: String,
+          required: [true, 'Attachment must have a Cloudinary publicId'],
+        },
+        filename: {
+          type: String,
+          required: [true, 'Attachment must have a filename'],
+        },
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     // Automatically add createdAt and updatedAt fields
